@@ -1,6 +1,11 @@
 ﻿  TuningMaker.cpp
-C:\Users\Dell\source\repos\TuningMaker\TuningMaker\TuningMaker.cpp(267,64): warning C4244: 'argument': conversion from 'const double' to 'const unsigned __int64', possible loss of data
-C:\Users\Dell\source\repos\TuningMaker\TuningMaker\TuningMaker.cpp(396,72): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
-C:\Users\Dell\source\repos\TuningMaker\TuningMaker\TuningMaker.cpp(405,66): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
-C:\Users\Dell\source\repos\TuningMaker\TuningMaker\TuningMaker.cpp(408,93): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
+C:\Users\Dell\source\repos\TuningMaker\TuningMaker\BaseScales.h(85,77): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
+  (compiling source file 'TuningMaker.cpp')
+  
+C:\Users\Dell\source\repos\TuningMaker\TuningMaker\BaseScales.h(91,70): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
+  (compiling source file 'TuningMaker.cpp')
+  
+C:\Users\Dell\source\repos\TuningMaker\TuningMaker\BaseScales.h(94,96): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
+  (compiling source file 'TuningMaker.cpp')
+  
   TuningMaker.vcxproj -> C:\Users\Dell\source\repos\TuningMaker\x64\Debug\TuningMaker.exe
