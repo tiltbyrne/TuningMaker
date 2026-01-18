@@ -27,13 +27,21 @@ Interval Scale::getInterval(const int& noteTo, const int& noteFrom) const
     return intervals[noteFrom][noteTo - noteFrom - 1];
 }
 
-std::vector<double> Scale::tuneScale(const double& weightLimit, const double& trueRootNote) const
+std::vector<double> Scale::tuneScale(const double& trueRootNote, const double& weightLimit) const
 {
+    
     std::vector<std::vector<double>> tunings(size(), std::vector<double>(size()));
 
     for (auto rootNote{ 0 }; rootNote != size(); ++rootNote)
         for (auto note{ 0 }; note != size(); ++note)
+        {
             tunings[rootNote][note] = rootNote == note ? 1 : makeTuning(rootNote, note, weightLimit);
+
+			std::cout << std::fixed << std::setprecision(1) <<
+                (((double)rootNote / (double)size()) +
+                ((double)note / ((double)size() * (double)size())))
+                * 100 << "% \r";
+        }
 
     for (auto rootNote{ 0 }; rootNote != size(); ++rootNote)
     {
@@ -52,6 +60,8 @@ std::vector<double> Scale::tuneScale(const double& weightLimit, const double& tr
 
         trueTuning[note] = std::pow(trueTuning[note], (double)1 / (double)size());
     }
+
+    std::cout << 100 << "% \r\n" << std::endl;
 
     return trueTuning;
 }

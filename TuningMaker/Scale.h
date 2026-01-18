@@ -17,7 +17,7 @@ public:
 
     Interval getInterval(const int& noteTo, const int& noteFrom) const;
 
-    std::vector<double> tuneScale(const double& weightLimit, const double& trueRootNote) const;
+    std::vector<double> tuneScale(const double& trueRootNote, const double& weightLimit = 0) const;
 
 private:
     const std::vector<std::vector<Interval>> intervals;

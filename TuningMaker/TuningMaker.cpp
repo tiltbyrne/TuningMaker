@@ -2,12 +2,11 @@
 
 int main()
 {
-    const auto majorScale_2{ BaseScales::repeatBaseScaleIntervals(BaseScales::majorScale, 2) };
+    const Scale scale{ BaseScales::baseFractionsToIntervalsWithHarmonicWeight(
+        BaseScales::repeatBaseScaleIntervals(BaseScales::sevenEDO, 5), 5) };
 
-    const Scale scale{ BaseScales::baseFractionsToIntervalsWithUniformWeight(majorScale_2) };
+    auto tuning{ scale.tuneScale(0, 0.0001) };
 
-    auto tuning{ scale.tuneScale(0.0001, 0) };
-
-    for (auto& note : tuning)
-		std::cout << centsFromRatio(note) << std::endl;
+    for (auto note{ 0 }; note != tuning.size(); ++note)
+		std::cout << "Note " << note << ") " << centsFromRatio(tuning[note]) << std::endl;
 }

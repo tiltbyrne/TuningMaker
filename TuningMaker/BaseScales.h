@@ -5,7 +5,11 @@
 
 namespace BaseScales
 {
-    const std::vector<std::vector<Fraction>> majorScale{
+	using Fractions = std::vector<std::vector<Fraction>>;
+    using Intervals = std::vector<std::vector<Interval>>;
+
+    const Fractions major
+    {
         { {9,8}, {5,4}, {4,3}, {3,2}, {5,3}, {15,8}, {2} },
         { {9,8}, {6,5}, {4,3}, {3,2}, {5,3}, {9,5} },
         { {16,15}, {6,5}, {4,3}, {3,2}, {8,5} },
@@ -13,14 +17,34 @@ namespace BaseScales
         { {9,8}, {5,4}, {4,3} },
         { {9,8}, {6,5} },
         { {16,15} }
-        };
+    };
 
-    inline double harmonicEntropyOfFraction(const Fraction& fraction)
+    const Fractions majorPentatonic
     {
-        return (double)1 / fraction.getNumerator() * fraction.getDenominator();
+        { {9,8}, {5,4}, {3,2}, {5,3}, {2,1} },
+        { {9,8}, {4,3}, {3,2}, {9,5} },
+        { {6,5}, {4,3}, {8,5} },
+        { {9,8}, {4,3} },
+        { {6,5} }
+    };
+
+    const Fractions sevenEDO
+    {
+        { {10,9}, {11,9}, {4,3}, {3,2}, {18,11}, {9,5}, {2,1} },
+        { {10,9}, {11,9}, {4,3}, {3,2}, {18,11}, {9,5} },
+        { {10,9}, {11,9}, {4,3}, {3,2}, {18,11} },
+        { {10,9}, {11,9}, {4,3}, {3,2} },
+        { {10,9}, {11,9}, {4,3} },
+        { {10,9}, {11,9} },
+        { {10,9} }
+    };
+
+    inline double harmonicEntropyOfFraction(const Fraction& fraction, const double& entropyCurve = 1)
+    {
+        return std::pow((double)1 / fraction.getNumerator() * fraction.getDenominator(), entropyCurve);
     }
 
-    Fraction getFractionInBaseFractions(const std::vector<std::vector<Fraction>>& baseFractions,
+    Fraction getFractionInBaseFractions(const Fractions& baseFractions,
         const int& noteTo, const int& noteFrom)
     {
         if (noteFrom > noteTo)
@@ -32,9 +56,9 @@ namespace BaseScales
         return baseFractions[noteFrom][noteTo - noteFrom - 1];
     }
 
-    std::vector<std::vector<Interval>> baseFractionsToIntervalsWithHarmonicWeight(const std::vector<std::vector<Fraction>>& baseFractions)
+    Intervals baseFractionsToIntervalsWithHarmonicWeight(const Fractions& baseFractions, const double& entropyCurve = 1)
     {
-        std::vector<std::vector<Interval>> baseIntervals;
+        Intervals baseIntervals;
         baseIntervals.reserve(baseFractions.size());
 
         for (auto rowItr{ baseFractions.begin() }; rowItr != baseFractions.end(); ++rowItr)
@@ -43,7 +67,8 @@ namespace BaseScales
 
             intervalsRow.reserve(rowItr->size());
             for (auto fractionItr{ rowItr->begin() }; fractionItr != rowItr->end(); ++fractionItr)
-                intervalsRow.push_back({ (double)*fractionItr, harmonicEntropyOfFraction(*fractionItr) });
+                intervalsRow.push_back({ (double)*fractionItr, harmonicEntropyOfFraction(*fractionItr,
+                                                                                         entropyCurve) });
 
             baseIntervals.push_back(intervalsRow);
         }
@@ -51,9 +76,9 @@ namespace BaseScales
         return baseIntervals;
     }
 
-    std::vector<std::vector<Interval>> baseFractionsToIntervalsWithUniformWeight(const std::vector<std::vector<Fraction>>& baseFractions)
+    Intervals baseFractionsToIntervalsWithUniformWeight(const Fractions& baseFractions)
     {
-        std::vector<std::vector<Interval>> baseIntervals;
+        Intervals baseIntervals;
         baseIntervals.reserve(baseFractions.size());
 
         for (auto rowItr{ baseFractions.begin() }; rowItr != baseFractions.end(); ++rowItr)
@@ -70,8 +95,11 @@ namespace BaseScales
         return baseIntervals;
     }
 
-    std::vector<std::vector<Fraction>> repeatBaseScaleIntervals(const std::vector<std::vector<Fraction>>& baseFractions, const int& times)
+    Fractions repeatBaseScaleIntervals(const Fractions& baseFractions, const int& times)
     {
+        if (times <= 1)
+			return baseFractions;
+
         auto repeatedFractions(baseFractions);
         repeatedFractions.reserve(baseFractions.size() * times);
 
