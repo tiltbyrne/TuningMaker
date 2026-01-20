@@ -1,3 +1,2 @@
-﻿  Scale.cpp
-C:\Users\Dell\source\repos\TuningMaker\TuningMaker\Scale.cpp(48,60): warning C4244: 'argument': conversion from 'const double' to 'const unsigned __int64', possible loss of data
+﻿  TuningMaker.cpp
   TuningMaker.vcxproj -> C:\Users\Dell\source\repos\TuningMaker\x64\Debug\TuningMaker.exe

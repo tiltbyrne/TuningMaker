@@ -1,48 +1,59 @@
 #include "Scale.h"
 
 Scale::Scale(const std::vector<std::vector<Interval>>& i)
-    : intervals(i)
+    : intervalsPattern(i)
 {
-    for (auto rowSize{ 0 }; rowSize != intervals.size(); ++rowSize)
+    for (auto rowSize{ 0 }; rowSize != intervalsPattern.size(); ++rowSize)
     {
-        if (intervals[rowSize].size() != intervals.size() - rowSize)
+        if (intervalsPattern[rowSize].size() != intervalsPattern.size() - rowSize)
             throw std::invalid_argument("Invalid scale intervals");
     }
 }
 
 inline size_t Scale::size() const
 {
-    return intervals.size() + 1;
+    return intervalsPattern.size() + 1;
 }
 
 Interval Scale::getInterval(const int& noteTo, const int& noteFrom) const
 {
     if (noteFrom > noteTo)
-        return { (double)1 / intervals[noteTo][noteFrom - noteTo - 1].size,
-                 intervals[noteTo][noteFrom - noteTo - 1].weight };
+        return { (double)1 / intervalsPattern[noteTo][noteFrom - noteTo - 1].size,
+                 intervalsPattern[noteTo][noteFrom - noteTo - 1].weight };
 
     if (noteTo == noteFrom)
         return { 1, 0 };
 
-    return intervals[noteFrom][noteTo - noteFrom - 1];
+    return intervalsPattern[noteFrom][noteTo - noteFrom - 1];
 }
 
 std::vector<double> Scale::tuneScale(const double& trueRootNote, const double& weightLimit) const
 {
-    
+    //calculate tunings for all root notes
     std::vector<std::vector<double>> tunings(size(), std::vector<double>(size()));
+
+    double lastLoadingPercentage{ 0 };
+    const double loadingInterval{ 0.1 };
+    std::cout << "Tuning scale:" << std::endl;
+    std::cout << std::fixed << std::setprecision(1) << 0.0 << "% \r";
 
     for (auto rootNote{ 0 }; rootNote != size(); ++rootNote)
         for (auto note{ 0 }; note != size(); ++note)
         {
             tunings[rootNote][note] = rootNote == note ? 1 : makeTuning(rootNote, note, weightLimit);
 
-			std::cout << std::fixed << std::setprecision(1) <<
-                (((double)rootNote / (double)size()) +
-                ((double)note / ((double)size() * (double)size())))
-                * 100 << "% \r";
+            const double nextLoadingPercentage{ (((double)rootNote / (double)size()) +
+                                                ((double)note / ((double)size() * (double)size()))
+                                                ) * 100 };
+
+            if (nextLoadingPercentage - lastLoadingPercentage >= loadingInterval)
+            {
+                std::cout << nextLoadingPercentage << "% \r";
+                lastLoadingPercentage = nextLoadingPercentage;
+            }
         }
 
+    //normalise tunings to the true root note
     for (auto rootNote{ 0 }; rootNote != size(); ++rootNote)
     {
         const auto adjustmentFactor{ 1 / tunings[rootNote][trueRootNote] };
@@ -52,6 +63,7 @@ std::vector<double> Scale::tuneScale(const double& trueRootNote, const double& w
                 tunedNote *= adjustmentFactor;
     }
 
+    //geometric mean of all tunings for each note gives the true tuning
     std::vector<double> trueTuning(size(), 1);
     for (auto note{ 0 }; note != size(); ++note)
     {
@@ -61,7 +73,7 @@ std::vector<double> Scale::tuneScale(const double& trueRootNote, const double& w
         trueTuning[note] = std::pow(trueTuning[note], (double)1 / (double)size());
     }
 
-    std::cout << 100 << "% \r\n" << std::endl;
+    std::cout << 100.0 << "% \r\n" << std::endl;
 
     return trueTuning;
 }
