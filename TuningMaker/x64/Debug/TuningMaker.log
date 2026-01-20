@@ -1,2 +1,7 @@
-﻿  TuningMaker.cpp
+﻿  PitchSpace.cpp
+C:\Users\Dell\source\repos\TuningMaker\TuningMaker\PitchSpace.cpp(26,90): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
+C:\Users\Dell\source\repos\TuningMaker\TuningMaker\PitchSpace.cpp(52,17): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
+C:\Users\Dell\source\repos\TuningMaker\TuningMaker\PitchSpace.cpp(51,107): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
+  TuningMaker.cpp
+  Generating Code...
   TuningMaker.vcxproj -> C:\Users\Dell\source\repos\TuningMaker\x64\Debug\TuningMaker.exe

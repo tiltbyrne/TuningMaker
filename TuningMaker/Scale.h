@@ -35,16 +35,28 @@ static std::vector<std::vector<Interval>> fractionsToIntervalsWithHarmonicWeight
     std::vector<std::vector<Interval>> baseIntervals;
     baseIntervals.reserve(baseFractions.size());
 
+    double maxWeight{ 0 };
     for (auto rowItr{ baseFractions.begin() }; rowItr != baseFractions.end(); ++rowItr)
     {
         std::vector<Interval> intervalsRow;
 
         intervalsRow.reserve(rowItr->size());
         for (auto fractionItr{ rowItr->begin() }; fractionItr != rowItr->end(); ++fractionItr)
-            intervalsRow.push_back({ (double)*fractionItr, harmonicEntropyOfFraction(*fractionItr, entropyCurve) });
+        {
+            const auto weight{ harmonicEntropyOfFraction(*fractionItr, entropyCurve) };
+            intervalsRow.push_back({ (double)*fractionItr, weight });
+
+            if (weight > maxWeight)
+                maxWeight = weight;
+        }
 
         baseIntervals.push_back(intervalsRow);
     }
+
+    //normalising weights
+    for (auto& row : baseIntervals)
+        for (auto& Interval : row)
+            Interval.weight /= maxWeight;
 
     return baseIntervals;
 }

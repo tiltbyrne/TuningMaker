@@ -35,7 +35,7 @@ std::vector<double> Scale::tuneScale(const double& trueRootNote, const double& w
     double lastLoadingPercentage{ 0 };
     const double loadingInterval{ 0.1 };
     std::cout << "Tuning scale:" << std::endl;
-    std::cout << std::fixed << std::setprecision(1) << 0.0 << "% \r";
+    std::cout << std::fixed << std::setprecision(1) << "0.0% \r";
 
     for (auto rootNote{ 0 }; rootNote != size(); ++rootNote)
         for (auto note{ 0 }; note != size(); ++note)
@@ -73,7 +73,7 @@ std::vector<double> Scale::tuneScale(const double& trueRootNote, const double& w
         trueTuning[note] = std::pow(trueTuning[note], (double)1 / (double)size());
     }
 
-    std::cout << 100.0 << "% \r\n" << std::endl;
+    std::cout << "100.0% \r\n" << std::endl;
 
     return trueTuning;
 }

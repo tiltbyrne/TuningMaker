@@ -29,5 +29,5 @@ private:
 
 static double harmonicEntropyOfFraction(const Fraction& fraction, const double& entropyCurve = 1)
 {
-    return std::pow((double)1 / fraction.getNumerator() * fraction.getDenominator(), entropyCurve);
+    return std::pow((double)1 / (fraction.getNumerator() * fraction.getDenominator()), entropyCurve);
 }
