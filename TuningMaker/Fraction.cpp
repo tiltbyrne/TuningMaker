@@ -16,7 +16,7 @@ int Fraction::getDenominator() const
     return denominator;
 }
 
-Fraction Fraction::getReciporical() const
+Fraction Fraction::reciporical() const
 {
     return Fraction(denominator, numerator);
 }

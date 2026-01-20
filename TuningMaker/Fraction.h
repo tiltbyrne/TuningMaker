@@ -10,7 +10,7 @@ public:
 
     int getDenominator() const;
 
-    Fraction getReciporical() const;
+    Fraction reciporical() const;
 
     void setValue(const int& newNumerator, const int& newDenominator = 1);
 
@@ -26,3 +26,8 @@ private:
 
     void cancel();
 };
+
+static double harmonicEntropyOfFraction(const Fraction& fraction, const double& entropyCurve = 1)
+{
+    return std::pow((double)1 / fraction.getNumerator() * fraction.getDenominator(), entropyCurve);
+}
