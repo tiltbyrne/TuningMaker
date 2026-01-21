@@ -1,41 +1,49 @@
 #pragma once
 #include "Fraction.h"
 #include "Utilities.h"
+#include <limits>
 
 struct Interval
 {
-    double size;
-    double weight{ 1 };
+    Interval(const long double& s, const long double& w)
+        : size{ clampLongDoubleToLimits(s) }
+        , weight{ clampLongDoubleToLimits(w) }
+    {}
+
+    long double size;
+    long double weight{ 1 };
 };
 
 class Scale
 {
 public:
-    Scale(const std::vector<std::vector<Interval>>& i);
+    Scale(const std::vector<std::vector<Interval>>& i, const std::string& n);
 
     inline size_t size() const;
 
     Interval getInterval(const int& noteTo, const int& noteFrom) const;
 
-    std::vector<double> tuneScale(const double& trueRootNote, const double& weightLimit = 0) const;
+    std::vector<long double> tuneScale(const long double& trueRootNote, const long double& weightLimit = 0) const;
 
 private:
     const std::vector<std::vector<Interval>> intervalsPattern;
+    const std::string name{};
 
-    double sumWeights(const int& noteTo, std::vector<int>& notesFrom) const;
+    long double sumWeights(const int& noteTo, std::vector<int>& notesFrom) const;
 
-    double makeTuning(const int& rootNote, int& note, const double& weightLimit) const;
+    long double makeTuning(const int& rootNote, int& note, const long double& weightLimit) const;
 
-    double traverseScale(int& lastNote, std::vector<int>& possibleNextNotesInPath,
-        const int& rootNote, const double& rollingWeight, const double& weightLimit) const;
+    long double traverseScale(int& lastNote, std::vector<int>& possibleNextNotesInPath,
+        const int& rootNote, const long double& rollingWeight, const long double& weightLimit,
+        const long double& possibleWeightsToNoteSum) const;
 };
 
-static std::vector<std::vector<Interval>> fractionsToIntervalsWithHarmonicWeight(const std::vector<std::vector<Fraction>>& baseFractions, const double& entropyCurve = 1)
+static std::vector<std::vector<Interval>> fractionsToIntervalsWithHarmonicWeight(const std::vector<std::vector<Fraction>>& baseFractions, const long double& entropyCurve = 1)
 {
     std::vector<std::vector<Interval>> baseIntervals;
     baseIntervals.reserve(baseFractions.size());
 
-    double maxWeight{ 0 };
+    long double maxWeight{ 0 };
     for (auto rowItr{ baseFractions.begin() }; rowItr != baseFractions.end(); ++rowItr)
     {
         std::vector<Interval> intervalsRow;
@@ -44,7 +52,7 @@ static std::vector<std::vector<Interval>> fractionsToIntervalsWithHarmonicWeight
         for (auto fractionItr{ rowItr->begin() }; fractionItr != rowItr->end(); ++fractionItr)
         {
             const auto weight{ harmonicEntropyOfFraction(*fractionItr, entropyCurve) };
-            intervalsRow.push_back({ (double)*fractionItr, weight });
+            intervalsRow.push_back({ (long double)*fractionItr, weight });
 
             if (weight > maxWeight)
                 maxWeight = weight;
@@ -72,7 +80,7 @@ static std::vector<std::vector<Interval>> baseFractionsToIntervalsWithUniformWei
 
         intervalsRow.reserve(rowItr->size());
         for (auto fractionItr{ rowItr->begin() }; fractionItr != rowItr->end(); ++fractionItr)
-            intervalsRow.push_back({ (double)*fractionItr, 1 });
+            intervalsRow.push_back({ (long double)*fractionItr, 1 });
 
         baseIntervals.push_back(intervalsRow);
     }

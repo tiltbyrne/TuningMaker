@@ -38,9 +38,6 @@
     <ClInclude Include="Utilities.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="BaseScales.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="PitchSpace.h">
       <Filter>Header Files</Filter>
     </ClInclude>

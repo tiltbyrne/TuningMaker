@@ -131,7 +131,6 @@
     <ClCompile Include="TuningMaker.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="BaseScales.h" />
     <ClInclude Include="Fraction.h" />
     <ClInclude Include="PitchSpace.h" />
     <ClInclude Include="Scale.h" />

@@ -52,7 +52,7 @@ namespace PitchSpaces
             Fraction{ 2 }
         } };
 
-    static PitchSpace sevenEDO{
+    static PitchSpace neutralSevenEDO{
         {
             Fraction{ 10, 9 },
             Fraction{ 11, 9 },

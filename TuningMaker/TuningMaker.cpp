@@ -15,17 +15,18 @@ static void initialiseBaseScales()
     chromatic.addSigniature("aolian", { 0, 2, 3, 5, 7, 8, 10 });
     chromatic.addSigniature("locrian", { 0, 1, 3, 5, 6, 8, 10 });
 
-    sevenEDO.addSigniature("pentatonic A", { 0, 1, 3, 4, 6 });
-    sevenEDO.addSigniature("pentatonic B", { 0, 2, 3, 5, 6 });
-    sevenEDO.addSigniature("full", { 0, 1, 2, 3, 4, 5, 6 });
+    neutralSevenEDO.addSigniature("neutral pentatonic A", { 0, 1, 3, 4, 6 });
+    neutralSevenEDO.addSigniature("neutral pentatonic B", { 0, 2, 3, 5, 6 });
 }
 
 int main()
 {
     initialiseBaseScales();
 
+    const std::string name{"neutral pentatonic A"};
+
     const Scale scale(fractionsToIntervalsWithHarmonicWeight(
-        PitchSpaces::sevenEDO.makeRangedScaleFractions("pentatonic A", 61), 0.1));
+        PitchSpaces::neutralSevenEDO.makeRangedScaleFractions(name, 128), 0.1), name);
 
     const auto trueRootNote{ 0 };
     const auto weightLimit{ 0.001 };

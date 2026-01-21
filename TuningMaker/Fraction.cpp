@@ -29,9 +29,9 @@ void Fraction::setValue(const int& newNumerator, const int& newDenominator)
     cancel();
 }
 
-Fraction::operator double() const
+Fraction::operator long double() const
 {
-    return (double)numerator / (double)denominator;
+    return (long double)numerator / (long double)denominator;
 }
 
 Fraction Fraction::operator*(const Fraction& otherFraction) const

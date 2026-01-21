@@ -34,7 +34,24 @@ static int integerPower(int base, int exp)
     return result;
 }
 
-static inline double centsFromRatio(const double& ratio)
+static inline double centsFromRatio(const long double& ratio)
 {
     return 1200 * std::log2(ratio);
+}
+
+static long double clampLongDoubleToLimits(const long double& value)
+{
+    constexpr long double min{ std::numeric_limits<long double>::min() },
+                          max{ std::numeric_limits<long double>::max() };
+
+    if (std::isnan(value))
+        return 0;
+
+    if (value < min)
+        return min;
+
+    if (value > max)
+        return max;
+
+    return value;
 }

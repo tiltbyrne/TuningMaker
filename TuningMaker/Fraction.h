@@ -14,7 +14,7 @@ public:
 
     void setValue(const int& newNumerator, const int& newDenominator = 1);
 
-    operator double() const;
+    operator long double() const;
 
     Fraction operator*(const Fraction& otherFraction) const;
 
@@ -27,7 +27,12 @@ private:
     void cancel();
 };
 
-static double harmonicEntropyOfFraction(const Fraction& fraction, const double& entropyCurve = 1)
+static long double harmonicEntropyOfFraction(const Fraction& fraction, const long double& entropyCurve = 1)
 {
-    return std::pow((double)1 / (fraction.getNumerator() * fraction.getDenominator()), entropyCurve);
+    auto returnValue{ std::pow(1L / (long double)(fraction.getNumerator() * fraction.getDenominator()), entropyCurve) };
+
+    if (std::isnan(returnValue))
+        returnValue = 0;
+
+    return returnValue;
 }
