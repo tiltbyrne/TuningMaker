@@ -1,5 +1,13 @@
 #include "PitchSpace.h"
 
+static std::vector<long double> insertDummyNotesInTuning(const std::vector<long double>& tuning, const std::vector<int>& dummyNoteIndecies)
+{
+    auto returnTuning{ tuning };
+    returnTuning.reserve(tuning.size() + dummyNoteIndecies.size());
+
+    
+}
+
 static void initialiseBaseScales()
 {
     using namespace PitchSpaces;
@@ -17,27 +25,34 @@ static void initialiseBaseScales()
 
     neutralSevenEDO.addSigniature("neutral pentatonic A", { 0, 1, 3, 4, 6 });
     neutralSevenEDO.addSigniature("neutral pentatonic B", { 0, 2, 3, 5, 6 });
+
+    neutralSevenEDO.addSigniature("full", { 0, 1, 2, 3, 4, 5, 6 });
 }
 
 int main()
 {
     initialiseBaseScales();
 
-    const std::string name{"neutral pentatonic A"};
+    const std::string name{ "full" };
 
-    const Scale scale(fractionsToIntervalsWithHarmonicWeight(
-        PitchSpaces::neutralSevenEDO.makeRangedScaleFractions(name, 128), 0.1), name);
+    const auto& pitchSpace{ PitchSpaces::neutralSevenEDO };
 
-    const auto trueRootNote{ 0 };
-    const auto weightLimit{ 0.001 };
+    const int range{ 61 };
 
-    const auto tuning{ scale.tuneScale(trueRootNote, weightLimit) };
+    const auto fractionsTable{ pitchSpace.makeRangedScaleFractions(name, range) };
 
-    for (auto note{ 0 }; note != tuning.size(); ++note)
+    if (fractionsTable.has_value())
     {
-        //if (note)
-            //std::cout << "\\\n" << centsFromRatio(tuning[note]) - centsFromRatio(tuning[note - 1]) << "\n\/\n";
+        Scale scale(fractionsToIntervalsWithHarmonicWeight(fractionsTable.value(), 20), name);
 
-        std::cout << std::fixed << std::setprecision(4) << centsFromRatio(tuning[note]) << std::endl;
+        scale.setDummyIndecies(pitchSpace.populateDummyIndecies(name, range));
+
+        const auto tuning{ scale.tuneScale(0, 0.00001) };
+
+        for (auto note{ 0 }; note != tuning.size(); ++note)
+            std::cout << /*note << ") " <<*/ std::fixed << std::setprecision(4) << FrequencyFromRatio(tuning[note], 20) << " ";
+
+        for (auto note{ 0 }; note != tuning.size(); ++note)
+            std::cout << /*note << ") " <<*/ std::fixed << std::setprecision(4) << FrequencyFromRatio(tuning[note], 20) << std::endl;
     }
 }

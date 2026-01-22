@@ -17,25 +17,48 @@ struct Interval
 class Scale
 {
 public:
+    Scale(const std::vector<std::vector<Interval>>& i);
+
     Scale(const std::vector<std::vector<Interval>>& i, const std::string& n);
 
     inline size_t size() const;
 
-    Interval getInterval(const int& noteTo, const int& noteFrom) const;
+    void setIntervalsPattern(const std::vector<std::vector<Interval>>& newIntervalsPattern);
 
-    std::vector<long double> tuneScale(const long double& trueRootNote, const long double& weightLimit = 0) const;
+    void setDummyIndecies(const std::vector<int>& newDummyIntervals);
+
+    void setName(const std::string& newName);
+
+    inline std::string getName() const;
+
+    std::vector<double> tuneScale(const int& trueRootNote, const long double& weightLimit = 0) const;
 
 private:
-    const std::vector<std::vector<Interval>> intervalsPattern;
-    const std::string name{};
+
+    std::vector<std::vector<Interval>> intervalsPattern;
+	//dummy notes, which equal -1, are inserted at these indecies. The function of dummy notes is to create spaces
+	//in the scale for notes with 0Hz frequency, which can be fingering scales which are have less than 12 notes per octave
+    std::vector<int> dummyIndecies;
+    std::string name;
+
+    Interval getInterval(const int& noteTo, const int& noteFrom) const;
 
     long double sumWeights(const int& noteTo, std::vector<int>& notesFrom) const;
 
     long double makeTuning(const int& rootNote, int& note, const long double& weightLimit) const;
 
-    long double traverseScale(int& lastNote, std::vector<int>& possibleNextNotesInPath,
-        const int& rootNote, const long double& rollingWeight, const long double& weightLimit,
-        const long double& possibleWeightsToNoteSum) const;
+    long double traverseScale(int& lastNote, std::vector<int>& possibleNextNotesInPath, const int& rootNote,
+                              const long double& rollingWeight, const long double& weightLimit,
+                              const long double& possibleWeightsToNoteSum) const;
+
+    bool intervalsPatternHasValidDimensions(const std::vector<std::vector<Interval>>& intervals) const;
+
+    std::vector<std::vector<long double>> makePopulatedTunings(const long double& weightLimit) const;
+
+    std::vector<double> normaliseTuningsAndMakeAverageTuning(std::vector<std::vector<long double>>& tunings,
+                                                                  const int& trueRootNote) const;
+
+    std::vector<double> insertDummyNotes(std::vector<double>& tuning) const;
 };
 
 static std::vector<std::vector<Interval>> fractionsToIntervalsWithHarmonicWeight(const std::vector<std::vector<Fraction>>& baseFractions, const long double& entropyCurve = 1)

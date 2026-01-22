@@ -34,12 +34,21 @@ static int integerPower(int base, int exp)
     return result;
 }
 
-static inline double centsFromRatio(const long double& ratio)
+static inline double centsFromRatio(const double& ratio)
 {
     return 1200 * std::log2(ratio);
 }
 
-static long double clampLongDoubleToLimits(const long double& value)
+//respond to dummy notes with 999,999,999,999,999Hz (well out of hearing range!)
+static inline double FrequencyFromRatio(const double& ratio, const double& baseFrequency)
+{
+    if (ratio < 0)
+        return 999999999999999;
+
+    return ratio * baseFrequency;
+}
+
+static long double clampLongDoubleToLimits(const double& value)
 {
     constexpr long double min{ std::numeric_limits<long double>::min() },
                           max{ std::numeric_limits<long double>::max() };

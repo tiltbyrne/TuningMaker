@@ -4,6 +4,7 @@
 #include <string>
 #include <map>
 #include <optional>
+#include <algorithm>
 
 using ScaleSigniature = std::vector<int>;
 
@@ -18,11 +19,15 @@ public:
 
     Fraction getFraction(const int& noteTo, const int& noteFrom) const;
 
-    std::vector<std::vector<Fraction>> makeRangedScaleFractions(const std::string& scaleSigniature, const int& range) const;
+    std::optional<std::vector<std::vector<Fraction>>> makeRangedScaleFractions(const std::string& scaleSigniature, const int& range) const;
 
     std::vector<std::vector<Fraction>> makeRangedScaleFractions(const ScaleSigniature& signiature, const int& range) const;
 
-    void addSigniature(const std::string& signiatureName, const ScaleSigniature& signiatureIntervals);
+    std::vector<int> populateDummyIndecies(const std::string& scaleSigniature, const int& range) const;
+
+    std::vector<int> populateDummyIndecies(const ScaleSigniature& signiature, const int& range) const;
+
+    void addSigniature(const std::string& signiatureName, ScaleSigniature signiatureIntervals);
 
     void removeSigniature(const std::string& signiatureName);
 
@@ -32,6 +37,7 @@ private:
     const std::vector<Fraction> table;
     std::map<std::string, ScaleSigniature> scaleSigniatures;
 
+    int noteInSigniature(const ScaleSigniature& signiature, const int& note) const;
 };
 
 namespace PitchSpaces
