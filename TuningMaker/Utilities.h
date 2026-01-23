@@ -39,8 +39,7 @@ static inline double centsFromRatio(const double& ratio)
     return 1200 * std::log2(ratio);
 }
 
-//respond to dummy notes with 999,999,999,999,999Hz (well out of hearing range!)
-static inline double FrequencyFromRatio(const double& ratio, const double& baseFrequency)
+static inline double frequencyFromRatio(const double& ratio, const double& baseFrequency)
 {
     if (ratio < 0)
         return 999999999999999;

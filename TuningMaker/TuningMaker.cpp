@@ -1,49 +1,82 @@
 #include "PitchSpace.h"
+#include <algorithm>
+
+static constexpr size_t maxMidiNotes{ 128 };
 
 static void initialiseBaseScales()
 {
-    using namespace PitchSpaces;
+    auto& sevenEDO{ PitchSpaces::fractional.at("seven EDO") };
 
-    chromatic.addSigniature("major pentatonic", { 0, 2, 4, 7, 9 });
-    chromatic.addSigniature("minor pentatonic", { 0, 3, 4, 7, 10 });
-    chromatic.addSigniature("ionion", { 0, 2, 4, 5, 7, 9, 11 });
-    chromatic.addSigniature("dorian", { 0, 2, 3, 5, 7, 9, 10 });
-    chromatic.addSigniature("phrygian", { 0, 1, 3, 5, 7, 8, 10 });
-    chromatic.addSigniature("lydian", { 0, 2, 4, 6, 7, 9, 11 });
-    chromatic.addSigniature("myxolydian", { 0, 2, 4, 5, 7, 9, 10 });
-    chromatic.addSigniature("aolian", { 0, 2, 3, 5, 7, 8, 10 });
-    chromatic.addSigniature("locrian", { 0, 1, 3, 5, 6, 8, 10 });
-    chromatic.addSigniature("full", { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 });
+    sevenEDO.addSigniature("neutral pentatonic A", { 0, 1, 3, 4, 6 });
+    sevenEDO.addSigniature("neutral pentatonic B", { 0, 2, 3, 5, 6 });
+    sevenEDO.addSigniature("full", { 0, 1, 2, 3, 4, 5, 6 });
 
-    neutralSevenEDO.addSigniature("neutral pentatonic A", { 0, 1, 3, 4, 6 });
-    neutralSevenEDO.addSigniature("neutral pentatonic B", { 0, 2, 3, 5, 6 });
-    neutralSevenEDO.addSigniature("full", { 0, 1, 2, 3, 4, 5, 6 });
+    auto& twelveEDO{ PitchSpaces::fractional.at("twelve EDO") };
+
+    twelveEDO.addSigniature("major pentatonic", { 0, 2, 4, 7, 9 });
+    twelveEDO.addSigniature("minor pentatonic", { 0, 3, 4, 7, 10 });
+    twelveEDO.addSigniature("ionion", { 0, 2, 4, 5, 7, 9, 11 });
+    twelveEDO.addSigniature("dorian", { 0, 2, 3, 5, 7, 9, 10 });
+    twelveEDO.addSigniature("phrygian", { 0, 1, 3, 5, 7, 8, 10 });
+    twelveEDO.addSigniature("lydian", { 0, 2, 4, 6, 7, 9, 11 });
+    twelveEDO.addSigniature("myxolydian", { 0, 2, 4, 5, 7, 9, 10 });
+    twelveEDO.addSigniature("aolian", { 0, 2, 3, 5, 7, 8, 10 });
+    twelveEDO.addSigniature("locrian", { 0, 1, 3, 5, 6, 8, 10 });
+    twelveEDO.addSigniature("full", { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 });
+
+    auto& chromatic{ PitchSpaces::fractional.at("seventeen EDO") };
 }
 
 int main()
 {
     initialiseBaseScales();
 
-    const std::string name{ "full" };
+    const std::string pitchSpaceName{ "seven EDO" };
 
-    const auto& pitchSpace{ PitchSpaces::neutralSevenEDO };
+    const auto& pitchSpace{ PitchSpaces::fractional.at(pitchSpaceName) };
 
-    const int range{ 61 };
+    const std::string name{ "neutral pentatonic A" };
 
-    const auto fractionsTable{ pitchSpace.makeRangedScaleFractions(name, range) };
+    const int range{ 11 };
+
+    const auto fractionsTable{ pitchSpace.makeRangedScaleRelations(name, range) };
 
     if (fractionsTable.has_value())
     {
-        Scale scale(fractionsToIntervalsWithHarmonicWeight(fractionsTable.value(), 20), name);
+        Scale scale(fractionsToIntervalsWithHarmonicWeight(fractionsTable.value(), 1),
+                    pitchSpaceName + " " + name);
 
-        scale.setDummyIndecies(pitchSpace.populateDummyIndecies(name, range));
+        const auto wantsDummyNotes{ true };
 
-        const auto tuning{ scale.tuneScale(0, 0.00001) };
+        if (wantsDummyNotes)
+            scale.setDummyIndecies(pitchSpace.populateDummyIndecies(name, range));
+
+        const auto trueRootNote{ 0 };
+
+        const double weightLimit{ 0.001 };
+
+        const auto tuning{ scale.tuneScale(trueRootNote, weightLimit) };
+
+        const double baseFrequency{ 20 };
+
+        std::cout << "Copy the following and paste it into the New Pitch textbox inside Scala's Edit scale window to make a tuning file: "
+            << std::endl << std::endl << "z";
 
         for (auto note{ 0 }; note != tuning.size(); ++note)
-            std::cout << /*note << ") " <<*/ std::fixed << std::setprecision(4) << FrequencyFromRatio(tuning[note], 20) << " ";
+            std::cout << std::fixed << std::setprecision(4) << frequencyFromRatio(tuning[note], baseFrequency) << " ";
+
+        std::cout << "999999999999999" << std::endl << std::endl << "Tuning in cents:" << std::endl << std::endl;
 
         for (auto note{ 0 }; note != tuning.size(); ++note)
-            std::cout << /*note << ") " <<*/ std::fixed << std::setprecision(4) << FrequencyFromRatio(tuning[note], 20) << std::endl;
+        {
+            const auto& cents{ centsFromRatio(tuning[note]) };
+
+            std::cout << "note " << note << ") ";
+
+            if (!std::isnan(cents))
+                std::cout << std::fixed << std::setprecision(4) << centsFromRatio(tuning[note]);
+
+            std::cout << std::endl;
+        }
     }
 }

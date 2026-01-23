@@ -149,7 +149,7 @@ std::vector<std::vector<long double>> Scale::makePopulatedTunings(const long dou
     long double lastPercentage{ 0 };
     const long double loadingInterval{ 0.1 };
 
-    std::cout << "Tuning scale " << name << " with range: " << size() << std::endl;
+    std::cout << "Tuning " << name << " scale with range: " << size() << std::endl;
     std::cout << std::fixed << std::setprecision(1) << "0.0% \r";
 
     for (auto rootNote{ 0 }; rootNote != size(); ++rootNote)

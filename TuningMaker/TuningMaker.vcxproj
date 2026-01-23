@@ -126,7 +126,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Fraction.cpp" />
-    <ClCompile Include="PitchSpace.cpp" />
     <ClCompile Include="Scale.cpp" />
     <ClCompile Include="TuningMaker.cpp" />
   </ItemGroup>
