@@ -14,7 +14,12 @@ class PitchSpace
 public:
     PitchSpace(const std::vector<Relation>& t)
         : table(t)
-    { }
+    {
+        ScaleSigniature fullSigniature(t.size());
+        std::iota(fullSigniature.begin(), fullSigniature.end(), 0);
+
+        addSigniature("full", fullSigniature);
+    }
 
     inline size_t size() const
     {
@@ -160,7 +165,7 @@ namespace PitchSpaces
             { 3, 2 },
             { 13, 8 },
             { 9, 5 },
-            { 2, 1 }
+            { 2 }
         } } },
         {"twelve EDO",
         { { { 17, 16 },
@@ -174,7 +179,7 @@ namespace PitchSpaces
             { 5, 3 },
             { 9, 5 },
             { 15, 8 },
-            { 2, 1 }
+            { 2 }
         } } },
         {"seventeen EDO",
         { { { 24, 23 },
@@ -193,25 +198,31 @@ namespace PitchSpaces
             { 7, 4 },
             { 11, 6 },
             { 23, 12 },
-            { 2, 1 }
+            { 2 }
         } } },
         {"twenty-two EDO",
         { { { 32, 31 },
-            { 15, 14 },
+            { 16, 15 },
             { 8, 7 },
             { 11, 10 },
-            { 11, 9 },
+            { 9, 8 },
+            { 7, 6 },
+            { 6, 5 },
+            { 5, 4 },
             { 9, 7 },
             { 4, 3 },
             { 11, 8 },
-            { 13, 9 },
+            { 7, 5 },
+            { 16, 11 },
             { 3, 2 },
             { 11, 7 },
-            { 13, 8 },
+            { 8, 5 },
+            { 5, 3 },
             { 12, 7 },
             { 7, 4 },
-            { 11, 6 },
-            { 23, 12 },
+            { 9, 5 },
+            { 15, 8 },
+            { 31, 16 },
             { 2 }
         } } },
     };
