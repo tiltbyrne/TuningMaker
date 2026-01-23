@@ -2,6 +2,8 @@ This project started because I was unsatisfied with the methods of creating tuni
 
 Fundimental to the method is the observation that a scale can be conceptualised as a grid (as in Grid Theory) where nodes represent notes and edges represent intervals. A tuning of all notes in a scale can be reached by periodically taking the geometric mean of the results of subpaths of paths to to a all notes in that scale. Due to the inherently explosive growth of path cardinality in graphs, computing such a tuning can take a very long time. So, an arbitrary lower interval weight limit is used, which nonetheless has minimal impact on the final tuning of each note.
 
+From an aesthetic perspective, I enjoy the fact that such a tuning will never quite be predictable - no interval will ever be pure and no two instances of the same interval will be tuned identically - deeply appealing. This type of unpredictability mimics pitch imprecision of acoustic instuments (e.g. imperfect string intonation or the effects of temperature change on brass instruments) which I find to be one of many subtle depths that such instruments have over digitally tuned ones. It occurs to me you might even tune an acoustic instrument according to one of these tunings, which could, at it's best, be said to mimic the type of tunings used in musical cultures which favour tuning by expert ear.
+
 To experiment for yourself take a look at the file TuningMaker.cpp. Feel free to reach out with any questions, corrections, or comments.
 
 E-mail: jamespatbyrne60@gmail.com
