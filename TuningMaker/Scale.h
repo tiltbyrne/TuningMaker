@@ -75,7 +75,7 @@ static std::vector<std::vector<Interval>> fractionsToIntervalsWithHarmonicWeight
         for (auto fractionItr{ rowItr->begin() }; fractionItr != rowItr->end(); ++fractionItr)
         {
             const auto weight{ harmonicEntropyOfFraction(*fractionItr, entropyCurve) };
-            intervalsRow.push_back({ (long double)*fractionItr, weight });
+            intervalsRow.push_back({ fractionItr->toLongDouble(), weight });
 
             if (weight > maxWeight)
                 maxWeight = weight;
@@ -103,7 +103,7 @@ static std::vector<std::vector<Interval>> baseFractionsToIntervalsWithUniformWei
 
         intervalsRow.reserve(rowItr->size());
         for (auto fractionItr{ rowItr->begin() }; fractionItr != rowItr->end(); ++fractionItr)
-            intervalsRow.push_back({ (long double)*fractionItr, 1 });
+            intervalsRow.push_back({ fractionItr->toLongDouble(), 1});
 
         baseIntervals.push_back(intervalsRow);
     }

@@ -23,6 +23,29 @@ static void initialiseBaseScales()
     twelveEDO.addSigniature("locrian", { 0, 1, 3, 5, 6, 8, 10 });
 }
 
+static void printTuning(const std::vector<double>& tuning, const double& baseFrequency)
+{
+    std::cout << "Copy the following and paste it into the New Pitch textbox inside Scala's Edit scale window to make a tuning file: "
+        << std::endl << std::endl << "z";
+
+    for (auto note{ 0 }; note != tuning.size(); ++note)
+        std::cout << std::fixed << std::setprecision(4) << frequencyFromRatio(tuning[note], baseFrequency) << " ";
+
+    std::cout << "999999999999999" << std::endl << std::endl << "Tuning in cents:" << std::endl << std::endl;
+
+    for (auto note{ 0 }; note != tuning.size(); ++note)
+    {
+        const auto& cents{ centsFromRatio(tuning[note]) };
+
+        std::cout << "note " << note << ") ";
+
+        if (!std::isnan(cents))
+            std::cout << std::fixed << std::setprecision(4) << centsFromRatio(tuning[note]);
+
+        std::cout << std::endl;
+    }
+}
+
 int main()
 {
     initialiseBaseScales();
@@ -31,48 +54,30 @@ int main()
 
     const auto& pitchSpace{ PitchSpaces::fractional.at(pitchSpaceName) };
 
-    const std::string scaleName{ "ionian" };
+    const std::string scaleName{ "major pentatonic" };
 
-    const int range{ 36 };
+    const auto range{ 11 };
 
-    const auto fractionsTable{ pitchSpace.makeRangedScaleRelations(scaleName, range) };
+    const auto relationsTable{ pitchSpace.makeRangedScaleRelations(scaleName, range) };
 
-    if (fractionsTable.has_value())
+    if (relationsTable.has_value())
     {
-        Scale scale(fractionsToIntervalsWithHarmonicWeight(fractionsTable.value(), 0),
+        Scale scale(fractionsToIntervalsWithHarmonicWeight(relationsTable.value(), 1),
                     pitchSpaceName + " " + scaleName);
 
         const auto wantsDummyNotes{ true };
 
         if (wantsDummyNotes)
-            scale.setDummyIndecies(pitchSpace.populateDummyIndecies(scaleName, range));
+            scale.setDummyIndecies(pitchSpace.getDummyIndecies(scaleName, range));
 
         const auto trueRootNote{ 0 };
 
-        const double weightLimit{ 0.0001 };
+        const double weightLimit{ 0.01 };
 
         const auto tuning{ scale.tuneScale(trueRootNote, weightLimit) };
 
         const double baseFrequency{ 20 };
 
-        std::cout << "Copy the following and paste it into the New Pitch textbox inside Scala's Edit scale window to make a tuning file: "
-            << std::endl << std::endl << "z";
-
-        for (auto note{ 0 }; note != tuning.size(); ++note)
-            std::cout << std::fixed << std::setprecision(4) << frequencyFromRatio(tuning[note], baseFrequency) << " ";
-
-        std::cout << "999999999999999" << std::endl << std::endl << "Tuning in cents:" << std::endl << std::endl;
-
-        for (auto note{ 0 }; note != tuning.size(); ++note)
-        {
-            const auto& cents{ centsFromRatio(tuning[note]) };
-
-            std::cout << "note " << note << ") ";
-
-            if (!std::isnan(cents))
-                std::cout << std::fixed << std::setprecision(4) << centsFromRatio(tuning[note]);
-
-            std::cout << std::endl;
-        }
+        printTuning(tuning, baseFrequency);
     }
 }

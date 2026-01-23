@@ -29,7 +29,7 @@ void Fraction::setValue(const int& newNumerator, const int& newDenominator)
     cancel();
 }
 
-Fraction::operator long double() const
+long double Fraction::toLongDouble() const
 {
     return (long double)numerator / (long double)denominator;
 }

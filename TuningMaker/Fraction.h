@@ -14,7 +14,7 @@ public:
 
     void setValue(const int& newNumerator, const int& newDenominator = 1);
 
-    operator long double() const;
+    long double toLongDouble() const;
 
     Fraction operator*(const Fraction& otherFraction) const;
 
