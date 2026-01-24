@@ -15,6 +15,8 @@ public:
     PitchSpace(const std::vector<Relation>& t)
         : table(t)
     {
+        std::sort(table.begin(), table.end());
+
         ScaleSigniature fullSigniature(t.size());
         std::iota(fullSigniature.begin(), fullSigniature.end(), 0);
 
@@ -69,7 +71,7 @@ public:
 
     std::vector<std::vector<Relation>> makeRangedScaleRelations(const ScaleSigniature& signiature, const int& range) const
     {
-        std::vector<std::vector<Fraction>> extendedScaleFractions;
+        std::vector<std::vector<Relation>> extendedScaleFractions;
         extendedScaleFractions.reserve(range);
 
 
@@ -99,12 +101,26 @@ public:
     void addSigniature(const std::string& signiatureName, ScaleSigniature signiatureIntervals)
     {
         std::sort(signiatureIntervals.begin(), signiatureIntervals.end());
+
+        for (auto& interval : signiatureIntervals)
+			interval = interval % size();
+
+        auto itr{ std::unique(signiatureIntervals.begin(), signiatureIntervals.end()) };
+
+        signiatureIntervals.erase(itr, signiatureIntervals.end());
+
         scaleSigniatures.insert_or_assign(signiatureName, signiatureIntervals);
     }
 
     void removeSigniature(const std::string& signiatureName)
     {
         scaleSigniatures.erase(signiatureName);
+    }
+
+
+    std::vector<Relation> getTable() const
+    {
+        return table;
     }
 
     std::optional<ScaleSigniature> getSigniature(const std::string& signiatureName) const
@@ -117,8 +133,46 @@ public:
         return std::nullopt;
     }
 
+    void printSigniature(const std::string& scaleName) const
+    {
+        if (scaleSigniatures.find(scaleName) != scaleSigniatures.end())
+        {
+            std::cout << "[" << scaleName << "] - ";
+            for (auto const& index : scaleSigniatures.at(scaleName))
+            {
+                std::cout << index << " (";
+                if (index == 0)
+                    std::cout << Relation(1) << ") ";
+                else
+                    std::cout << table[index - 1] << ") ";
+            }
+
+            std::cout << '\b';
+        }
+    }
+
+    void printSigniatures() const
+    {
+        for (auto const& signiature : scaleSigniatures)
+        {
+            std::cout << "[" << signiature.first << "] - ";
+            for (auto const& index : signiature.second)
+            {
+                std::cout << index << " (";
+                if (index == 0)
+                    std::cout << Relation(1) << ") ";
+                else
+                    std::cout << table[index - 1] << ") ";
+            }
+
+            std::cout << std::endl << std::endl;
+        }
+
+        std::cout << '\b';
+    }
+
 private:
-    const std::vector<Relation> table;
+    std::vector<Relation> table;
     std::map<std::string, ScaleSigniature> scaleSigniatures;
 
     int noteInSigniature(const ScaleSigniature& signiature, const int& note) const
@@ -157,8 +211,8 @@ private:
 namespace PitchSpaces
 {
     static std::map<std::string, PitchSpace<Fraction>> fractional
-    { 
-        {"seven EDO",
+    {
+        {"7edo",
         { { { 10, 9 },
             { 11, 9 },
             { 4, 3 },
@@ -167,7 +221,7 @@ namespace PitchSpaces
             { 9, 5 },
             { 2 }
         } } },
-        {"twelve EDO",
+        {"12edo",
         { { { 17, 16 },
             { 9, 8 },
             { 6, 5 },
@@ -181,7 +235,7 @@ namespace PitchSpaces
             { 15, 8 },
             { 2 }
         } } },
-        {"seventeen EDO",
+        {"17edo",
         { { { 24, 23 },
             { 12, 11 },
             { 8, 7 },
@@ -200,7 +254,7 @@ namespace PitchSpaces
             { 23, 12 },
             { 2 }
         } } },
-        {"twenty-two EDO",
+        {"22edo",
         { { { 32, 31 },
             { 16, 15 },
             { 8, 7 },
@@ -226,4 +280,32 @@ namespace PitchSpaces
             { 2 }
         } } },
     };
+
+    static std::map<std::string, PitchSpace<long double>> decimal;
+
+    template<typename Relation>
+    bool typeContainingPitchSpace(const PitchSpace<Relation>& pitchClasses, const std::string& pitchSpaceName)
+    {
+        if (fractional.find(pitchSpaceName) != fractional.end())
+            return fractional;
+
+        if (decimal.find(pitchSpaceName) != decimal.end())
+            return decimal;
+
+        return std::nullopt;
+	}
+
+    template<typename Map>
+    static void printPitchSpaces(const Map& pitchSpaces)
+    {
+        for (auto const& space : pitchSpaces)
+        {
+            std::cout << "[" << space.first << "] - ";
+
+            for (auto const& relation : space.second.getTable())
+                std::cout << relation << "  ";
+
+			std::cout << std::endl << std::endl;
+        }
+    }
 }

@@ -1,6 +1,10 @@
 #include "Scale.h"
 #include <algorithm>
 
+Scale::Scale()
+{
+}
+
 Scale::Scale(const std::vector<std::vector<Interval>>& i)
     : intervalsPattern(intervalsPatternHasValidDimensions(i) ? i : std::vector<std::vector<Interval>>{})
 {
@@ -126,15 +130,6 @@ long double Scale::traverseScale(int& lastNote, std::vector<int>& possibleNextNo
     return returnValue;
 }
 
-bool Scale::intervalsPatternHasValidDimensions(const std::vector<std::vector<Interval>>& intervals) const
-{
-    for (auto rowSize{ 0 }; rowSize != intervalsPattern.size(); ++rowSize)
-        if (intervalsPattern[rowSize].size() != intervalsPattern.size() - rowSize)
-            return false;
-
-    return true;
-}
-
 std::vector<std::vector<long double>> Scale::makePopulatedTunings(const long double& weightLimit) const
 {
     auto percentTuned{ [this](int& rootNote, int& note) -> long double
@@ -149,8 +144,8 @@ std::vector<std::vector<long double>> Scale::makePopulatedTunings(const long dou
     long double lastPercentage{ 0 };
     const long double loadingInterval{ 0.1 };
 
-    std::cout << "Tuning " << name << " scale with range: " << size() << std::endl;
-    std::cout << std::fixed << std::setprecision(1) << "0.0% \r";
+    std::cout << "Tuning " << name << std::endl << std::endl;
+    std::cout << std::fixed << std::setprecision(1) << "Progress: 0.0% \r";
 
     for (auto rootNote{ 0 }; rootNote != size(); ++rootNote)
         for (auto note{ 0 }; note != size(); ++note)
@@ -161,12 +156,12 @@ std::vector<std::vector<long double>> Scale::makePopulatedTunings(const long dou
 
             if (percentage - lastPercentage >= loadingInterval)
             {
-                std::cout << percentage << "% \r";
+                std::cout << "Progress: " << percentage << "% \r";
                 lastPercentage = percentage;
             }
         }
 
-    std::cout << "100.0% \r\n" << std::endl;
+    std::cout << "Progress: 100.0% \r\n" << std::endl;
 
     return tunings;
 }

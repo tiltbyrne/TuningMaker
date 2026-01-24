@@ -5,6 +5,12 @@
 
 struct Interval
 {
+    Interval()
+        : size{ 1 }
+        , weight{ 1 }
+	{
+	}
+
     Interval(const long double& s, const long double& w)
         : size{ clampLongDoubleToLimits(s) }
         , weight{ clampLongDoubleToLimits(w) }
@@ -17,6 +23,8 @@ struct Interval
 class Scale
 {
 public:
+    Scale();
+
     Scale(const std::vector<std::vector<Interval>>& i);
 
     Scale(const std::vector<std::vector<Interval>>& i, const std::string& n);
@@ -51,8 +59,6 @@ private:
                               const long double& rollingWeight, const long double& weightLimit,
                               const long double& possibleWeightsToNoteSum) const;
 
-    bool intervalsPatternHasValidDimensions(const std::vector<std::vector<Interval>>& intervals) const;
-
     std::vector<std::vector<long double>> makePopulatedTunings(const long double& weightLimit) const;
 
     std::vector<double> normaliseTuningsAndMakeAverageTuning(std::vector<std::vector<long double>>& tunings,
@@ -61,20 +67,20 @@ private:
     std::vector<double> insertDummyNotes(std::vector<double>& tuning) const;
 };
 
-static std::vector<std::vector<Interval>> fractionsToIntervalsWithHarmonicWeight(const std::vector<std::vector<Fraction>>& baseFractions, const long double& entropyCurve = 1)
+static std::vector<std::vector<Interval>> rangedScaleFractionsToIntervalsWithTenneyWeight(const std::vector<std::vector<Fraction>>& rangedScale, const long double& entropyCurve = 1)
 {
     std::vector<std::vector<Interval>> baseIntervals;
-    baseIntervals.reserve(baseFractions.size());
+    baseIntervals.reserve(rangedScale.size());
 
     long double maxWeight{ 0 };
-    for (auto rowItr{ baseFractions.begin() }; rowItr != baseFractions.end(); ++rowItr)
+    for (auto rowItr{ rangedScale.begin() }; rowItr != rangedScale.end(); ++rowItr)
     {
         std::vector<Interval> intervalsRow;
 
         intervalsRow.reserve(rowItr->size());
         for (auto fractionItr{ rowItr->begin() }; fractionItr != rowItr->end(); ++fractionItr)
         {
-            const auto weight{ harmonicEntropyOfFraction(*fractionItr, entropyCurve) };
+            const auto weight{ tenneyWeightOfFraction(*fractionItr, entropyCurve) };
             intervalsRow.push_back({ fractionItr->toLongDouble(), weight });
 
             if (weight > maxWeight)
@@ -92,21 +98,30 @@ static std::vector<std::vector<Interval>> fractionsToIntervalsWithHarmonicWeight
     return baseIntervals;
 }
 
-static std::vector<std::vector<Interval>> baseFractionsToIntervalsWithUniformWeight(const std::vector<std::vector<Fraction>>& baseFractions)
+static std::vector<std::vector<Interval>> rangedScaleLongDoubleToIntervalsWithUniformWeight(const std::vector<std::vector<long double>>& rangedScale)
 {
     std::vector<std::vector<Interval>> baseIntervals;
-    baseIntervals.reserve(baseFractions.size());
+    baseIntervals.reserve(rangedScale.size());
 
-    for (auto rowItr{ baseFractions.begin() }; rowItr != baseFractions.end(); ++rowItr)
+    for (auto rowItr{ rangedScale.begin() }; rowItr != rangedScale.end(); ++rowItr)
     {
         std::vector<Interval> intervalsRow;
 
         intervalsRow.reserve(rowItr->size());
         for (auto fractionItr{ rowItr->begin() }; fractionItr != rowItr->end(); ++fractionItr)
-            intervalsRow.push_back({ fractionItr->toLongDouble(), 1});
+            intervalsRow.push_back({ *fractionItr, 1});
 
         baseIntervals.push_back(intervalsRow);
     }
 
     return baseIntervals;
+}
+
+static bool intervalsPatternHasValidDimensions(const std::vector<std::vector<Interval>>& intervals)
+{
+    for (auto rowSize{ 0 }; rowSize != intervals.size(); ++rowSize)
+        if (intervals[rowSize].size() != intervals.size() - rowSize)
+            return false;
+
+    return true;
 }

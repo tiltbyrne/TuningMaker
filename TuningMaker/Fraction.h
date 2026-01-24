@@ -16,9 +16,13 @@ public:
 
     long double toLongDouble() const;
 
+    bool operator<(const Fraction& otherFraction) const;
+
     Fraction operator*(const Fraction& otherFraction) const;
 
     Fraction power(const int& exponent) const;
+
+    friend std::ostream& operator<<(std::ostream& os, const Fraction& dt);
 
 private:
     int numerator;
@@ -27,7 +31,7 @@ private:
     void cancel();
 };
 
-static long double harmonicEntropyOfFraction(const Fraction& fraction, const long double& entropyCurve = 1)
+static long double tenneyWeightOfFraction(const Fraction& fraction, const long double& entropyCurve = 1)
 {
     auto returnValue{ std::pow(1L / (long double)(fraction.getNumerator() * fraction.getDenominator()), entropyCurve) };
 
