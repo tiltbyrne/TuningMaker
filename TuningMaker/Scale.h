@@ -11,52 +11,25 @@
 class Interval
 {
 public:
-    Interval()
-        : size{ 1 }
-        , weight{ 1 }
-	{
-	}
+    Interval();
 
-    Interval(const long double& s, const long double& w = 1)
-        : size{ clampLongDoubleToLimits(s) }
-        , weight{ clampLongDoubleToLimits(w) }
-    {
-        if (weight == 0)
-            weight = std::numeric_limits<long double>::lowest();
-    }
+    Interval(const long double& s, const long double& w = 1);
 
-    inline long double getSize() const
-    {
-        return size;
-    }
+    inline long double getSize() const;
 
-    inline long double getWeight() const
-    {
-        return weight;
-    }
+    inline long double getWeight() const;
 
-    void setSize(const long double& newSize)
-    {
-        size = clampLongDoubleToLimits(newSize);
-    }
+    void setSize(const long double& newSize);
 
-    void setWeight(const long double& newWeight)
-    {
-        weight = clampLongDoubleToLimits(newWeight);
+    void setWeight(const long double& newWeight);
 
-        if (weight <= 0)
-            weight = std::numeric_limits<long double>::lowest();
-    }
-
-    void setInterval(const long double& newSize, const long double& newWeight)
-    {
-        setSize(newSize);
-        setWeight(newWeight);
-    }
+    void setInterval(const long double& newSize, const long double& newWeight);
 
 private:
     long double size;
     long double weight;
+
+    void manageZeroWeight();
 };
 
 /*
