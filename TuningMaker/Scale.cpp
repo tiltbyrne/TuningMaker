@@ -61,8 +61,8 @@ inline std::string Scale::getName() const
 Interval Scale::getInterval(const int& noteTo, const int& noteFrom) const
 {
     if (noteFrom > noteTo)
-        return { 1L / intervalsPattern[noteTo][noteFrom - noteTo - 1].size,
-                 intervalsPattern[noteTo][noteFrom - noteTo - 1].weight };
+        return { 1L / intervalsPattern[noteTo][noteFrom - noteTo - 1].getSize(),
+                 intervalsPattern[noteTo][noteFrom - noteTo - 1].getWeight() };
 
     if (noteTo == noteFrom)
         return { 1, 0 };
@@ -84,7 +84,7 @@ long double Scale::sumWeights(const int& noteTo, std::vector<int>& notesFrom) co
     long double sum{ 0 };
 
     for (auto& noteFrom : notesFrom)
-        sum += getInterval(noteTo, noteFrom).weight;
+        sum += getInterval(noteTo, noteFrom).getWeight();
 
     return sum;
 }
@@ -116,8 +116,8 @@ long double Scale::traverseScale(int& lastNote, std::vector<int>& possibleNextNo
         const auto nextNote{ possibleNextNotesInPath[nextNoteIndex] };
         const auto nextInterval{ getInterval(lastNote, nextNote) };
 
-        if (nextNote == rootNote || nextInterval.weight * rollingWeight <= weightLimit)
-            returnValue *= std::pow(getInterval(lastNote, rootNote).size, nextInterval.weight * possibleWeightsToNoteSum);
+        if (nextNote == rootNote || nextInterval.getWeight() * rollingWeight <= weightLimit)
+            returnValue *= std::pow(getInterval(lastNote, rootNote).getSize(), nextInterval.getWeight() * possibleWeightsToNoteSum);
         else
         {
             const auto initialLastNote{ lastNote };
@@ -127,9 +127,9 @@ long double Scale::traverseScale(int& lastNote, std::vector<int>& possibleNextNo
 
             const auto sumWeightsToNextNote{ 1 / sumWeights(nextNote, possibleNextNotesInPath) };
 
-            returnValue *= std::pow(nextInterval.size * traverseScale(lastNote, possibleNextNotesInPath, rootNote,
-                                                           nextInterval.weight * rollingWeight * sumWeightsToNextNote, weightLimit, sumWeightsToNextNote),
-                                    nextInterval.weight * possibleWeightsToNoteSum);
+            returnValue *= std::pow(nextInterval.getSize() * traverseScale(lastNote, possibleNextNotesInPath, rootNote,
+                                                           nextInterval.getWeight() * rollingWeight * sumWeightsToNextNote, weightLimit, sumWeightsToNextNote),
+                                    nextInterval.getWeight() * possibleWeightsToNoteSum);
 
             possibleNextNotesInPath.insert(possibleNextNotesInPath.begin() + nextNoteIndex, lastNote);
             lastNote = initialLastNote;
@@ -222,10 +222,10 @@ void Scale::normaliseWeights()
     long double maxWeight{ 0 };
     for (const auto& row : intervalsPattern)
         for (const auto& Interval : row)
-            if (Interval.weight > maxWeight)
-                maxWeight = Interval.weight;
+            if (Interval.getWeight() > maxWeight)
+                maxWeight = Interval.getWeight();
 
     for (auto& row : intervalsPattern)
         for (auto& Interval : row)
-            Interval.weight /= maxWeight;
+            Interval.setWeight(Interval.getWeight() / maxWeight);
 }

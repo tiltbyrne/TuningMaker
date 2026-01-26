@@ -299,7 +299,7 @@ int main()
         if (relationsTable.has_value())
         {
             std::cout << std::endl << "Enter the exponent of the Tenney height used to calculate each interval's weight "
-                << "(hint: larger values can produce tunings with more relatively accurate approximations of 'simple' intervals and 0 treats all intervals equally) : ";
+                << "(hint: larger values can produce tunings with more relatively accurate approximations of 'simple' intervals and 0 treats all intervals equally): ";
 
             long double enropyCurve;
             std::cin >> enropyCurve;

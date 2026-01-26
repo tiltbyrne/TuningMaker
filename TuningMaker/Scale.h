@@ -8,8 +8,9 @@
   at the other. Mathematically, this number is the interval's size, while it's weight represents how
   "important" it is (howver that is interpreted).
 */
-struct Interval
+class Interval
 {
+public:
     Interval()
         : size{ 1 }
         , weight{ 1 }
@@ -20,10 +21,40 @@ struct Interval
         : size{ clampLongDoubleToLimits(s) }
         , weight{ clampLongDoubleToLimits(w) }
     {
-        if (weight <= 0)
-            weight = std::numeric_limits<long double>::min();
+        if (weight == 0)
+            weight = std::numeric_limits<long double>::lowest();
     }
 
+    inline long double getSize() const
+    {
+        return size;
+    }
+
+    inline long double getWeight() const
+    {
+        return weight;
+    }
+
+    void setSize(const long double& newSize)
+    {
+        size = clampLongDoubleToLimits(newSize);
+    }
+
+    void setWeight(const long double& newWeight)
+    {
+        weight = clampLongDoubleToLimits(newWeight);
+
+        if (weight <= 0)
+            weight = std::numeric_limits<long double>::lowest();
+    }
+
+    void setInterval(const long double& newSize, const long double& newWeight)
+    {
+        setSize(newSize);
+        setWeight(newWeight);
+    }
+
+private:
     long double size;
     long double weight;
 };
