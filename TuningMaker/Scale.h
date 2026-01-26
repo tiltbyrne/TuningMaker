@@ -161,6 +161,18 @@ namespace IntervalPatternMakers
     using IntervalsPattern = std::vector<std::vector<Interval>>;
 
     /*
+      Normalises the weights of all intervals in pattern to a range of [0, 1]. Does not check if maxWeight
+      trully is the greatest value in the pattern.
+    */
+    static void normaliseWeights(IntervalsPattern& pattern, const int& maxWeight)
+    {
+        //normalising weights
+        for (auto& row : pattern)
+            for (auto& Interval : row)
+                Interval.weight /= maxWeight;
+    }
+
+    /*
       Produces an IntervalsPattern where all intervals have a weight equal to one over the product of the
       numerator and denominator (their Tenney Weight), raised to the power of entropyCurve.
     */
@@ -168,8 +180,8 @@ namespace IntervalPatternMakers
         rangedScaleFractionsToIntervalsWithTenneyWeight(const std::vector<std::vector<Fraction>>& rangedScale,
                                                         const long double& entropyCurve = 0)
     {
-        IntervalsPattern baseIntervals;
-        baseIntervals.reserve(rangedScale.size());
+        IntervalsPattern pattern;
+        pattern.reserve(rangedScale.size());
 
         long double maxWeight{ 0 };
         for (auto rowItr{ rangedScale.begin() }; rowItr != rangedScale.end(); ++rowItr)
@@ -186,15 +198,12 @@ namespace IntervalPatternMakers
                     maxWeight = weight;
             }
 
-            baseIntervals.push_back(intervalsRow);
+            pattern.push_back(intervalsRow);
         }
 
-        //normalising weights
-        for (auto& row : baseIntervals)
-            for (auto& Interval : row)
-                Interval.weight /= maxWeight;
+        normaliseWeights(pattern, maxWeight);
 
-        return baseIntervals;
+        return pattern;
     }
     
     /*
@@ -203,8 +212,8 @@ namespace IntervalPatternMakers
     static IntervalsPattern
         rangedScaleLongDoubleToIntervalsWithUniformWeight(const std::vector<std::vector<long double>>& rangedScale)
     {
-        IntervalsPattern baseIntervals;
-        baseIntervals.reserve(rangedScale.size());
+        IntervalsPattern pattern;
+        pattern.reserve(rangedScale.size());
 
         for (auto rowItr{ rangedScale.begin() }; rowItr != rangedScale.end(); ++rowItr)
         {
@@ -214,9 +223,9 @@ namespace IntervalPatternMakers
             for (auto fractionItr{ rowItr->begin() }; fractionItr != rowItr->end(); ++fractionItr)
                 intervalsRow.push_back(*fractionItr);
 
-            baseIntervals.push_back(intervalsRow);
+            pattern.push_back(intervalsRow);
         }
 
-        return baseIntervals;
+        return pattern;
     }
 }
