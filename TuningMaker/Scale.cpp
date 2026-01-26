@@ -13,12 +13,14 @@ Scale::Scale(const std::string& n)
 Scale::Scale(const std::vector<std::vector<Interval>>& i)
     : intervalsPattern(patternHasTriangularDimensions(i) ? i : std::vector<std::vector<Interval>>{})
 {
+    normaliseWeights();
 }
 
 Scale::Scale(const std::vector<std::vector<Interval>>& i, const std::string& n)
     : intervalsPattern(patternHasTriangularDimensions(i) ? i : std::vector<std::vector<Interval>>{})
     , name(n)
 {
+    normaliseWeights();
 }
 
 inline size_t Scale::size() const
@@ -31,6 +33,8 @@ void Scale::setIntervalsPattern(const std::vector<std::vector<Interval>>& newInt
     if (patternHasTriangularDimensions(newIntervalsPattern))
     {
         intervalsPattern = newIntervalsPattern;
+
+        normaliseWeights();
         setDummyIndecies({});
     }
 }
@@ -173,7 +177,6 @@ std::vector<std::vector<long double>> Scale::makePopulatedTunings(const long dou
 
 std::vector<double> Scale::normaliseTuningsAndMakeAverageTuning(std::vector<std::vector<long double>>& tunings, const int& trueRootNote) const
 {
-
     //normalise
     for (auto rootNote{ 1 }; rootNote != size(); ++rootNote)
         if (rootNote != trueRootNote)
@@ -209,4 +212,20 @@ std::vector<double> Scale::insertDummyNotes(std::vector<double>& tuning) const
         }
 
     return tuning;
+}
+
+/*
+  Normalises the weights of all intervals in intervalsPattern to a range of (0, 1].
+*/
+void Scale::normaliseWeights()
+{
+    long double maxWeight{ 0 };
+    for (const auto& row : intervalsPattern)
+        for (const auto& Interval : row)
+            if (Interval.weight > maxWeight)
+                maxWeight = Interval.weight;
+
+    for (auto& row : intervalsPattern)
+        for (auto& Interval : row)
+            Interval.weight /= maxWeight;
 }

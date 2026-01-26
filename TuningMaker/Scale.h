@@ -4,8 +4,9 @@
 #include <limits>
 
 /*
-  Musically, an interval between two notes is the factor you need to multiply one note by to a arrive at the other. Mathematically,
-  this number is the interval's size, while it's weight represents how "important" it is (howver that is interpreted).
+  Musically, an interval between two notes is the factor you need to multiply one note by to a arrive
+  at the other. Mathematically, this number is the interval's size, while it's weight represents how
+  "important" it is (howver that is interpreted).
 */
 struct Interval
 {
@@ -18,7 +19,10 @@ struct Interval
     Interval(const long double& s, const long double& w = 1)
         : size{ clampLongDoubleToLimits(s) }
         , weight{ clampLongDoubleToLimits(w) }
-    {}
+    {
+        if (weight <= 0)
+            weight = std::numeric_limits<long double>::min();
+    }
 
     long double size;
     long double weight;
@@ -153,7 +157,14 @@ private:
       Inserts NaN at the indecies contained in dummyIndecies if those intervals are valid.
     */
     std::vector<double> insertDummyNotes(std::vector<double>& tuning) const;
+
+    /*
+      Normalises the weights of all intervals in pattern to a range of [0, 1]. Does not check if maxWeight
+      trully is the greatest value in the pattern.
+    */
+    void normaliseWeights();
 };
+
 
 //All functions in this namespace should return an IntervalPattern which can be used by Scale objects.
 namespace IntervalPatternMakers
@@ -161,24 +172,12 @@ namespace IntervalPatternMakers
     using IntervalsPattern = std::vector<std::vector<Interval>>;
 
     /*
-      Normalises the weights of all intervals in pattern to a range of [0, 1]. Does not check if maxWeight
-      trully is the greatest value in the pattern.
-    */
-    static void normaliseWeights(IntervalsPattern& pattern, const int& maxWeight)
-    {
-        //normalising weights
-        for (auto& row : pattern)
-            for (auto& Interval : row)
-                Interval.weight /= maxWeight;
-    }
-
-    /*
       Produces an IntervalsPattern where all intervals have a weight equal to one over the product of the
       numerator and denominator (their Tenney Weight), raised to the power of entropyCurve.
     */
     static IntervalsPattern
         rangedScaleFractionsToIntervalsWithTenneyWeight(const std::vector<std::vector<Fraction>>& rangedScale,
-                                                        const long double& entropyCurve = 0)
+            const long double& entropyCurve = 0)
     {
         IntervalsPattern pattern;
         pattern.reserve(rangedScale.size());
@@ -201,11 +200,9 @@ namespace IntervalPatternMakers
             pattern.push_back(intervalsRow);
         }
 
-        normaliseWeights(pattern, maxWeight);
-
         return pattern;
     }
-    
+
     /*
       Produces an IntervalsPattern where all intervals have equal weight.
     */

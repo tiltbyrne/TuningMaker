@@ -63,9 +63,6 @@ static long double clampLongDoubleToLimits(const long double& value)
     constexpr long double min{ std::numeric_limits<long double>::min() },
                           max{ std::numeric_limits<long double>::max() };
 
-    if (std::isnan(value))
-        return 0;
-
     if (value < min)
         return min;
 

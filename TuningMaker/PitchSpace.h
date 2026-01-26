@@ -202,7 +202,7 @@ public:
                     std::cout << table[index - 1] << ") ";
             }
 
-            std::cout << "(" << size() << ") " << relationOfRepetition();
+            //std::cout << "(" << size() << ") " << relationOfRepetition();
         }
     }
 
@@ -224,7 +224,7 @@ public:
                     std::cout << table[index - 1] << ") ";
             }
 
-            std::cout << "(" << size() << ") " << relationOfRepetition();
+            //std::cout << "(" << size() << ") " << relationOfRepetition();
 
             std::cout << std::endl << std::endl;
         }
@@ -360,6 +360,23 @@ namespace PitchSpaces
             { 31, 16 },
             { 2 }
         } } },
+        {"15edo",
+        { { { 21, 20 },
+            { 11, 10 },
+            { 8, 7 },
+            { 6, 5 },
+            { 5, 4 },
+            { 4, 3 },
+            { 11, 8 },
+            { 16, 11 },
+            { 3, 2 },
+            { 8, 5 },
+            { 5, 3 },
+            { 7, 4 },
+            { 11, 6 },
+            { 21, 11 },
+            { 2 }
+        } } },
     };
 
     /*
@@ -378,10 +395,7 @@ namespace PitchSpaces
         {
             std::cout << "[" << space.first << "] - ";
 
-            auto relations{ space.second.getTable() };
-            relations.insert(relations.begin(), 1);
-
-            for (auto const& relation : relations)
+            for (auto const& relation : space.second.getTable())
                 std::cout << relation << "  ";
 
 			std::cout << std::endl << std::endl;
