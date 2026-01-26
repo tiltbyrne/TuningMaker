@@ -5,13 +5,18 @@ Scale::Scale()
 {
 }
 
+Scale::Scale(const std::string& n)
+    : name(n)
+{
+}
+
 Scale::Scale(const std::vector<std::vector<Interval>>& i)
-    : intervalsPattern(intervalsPatternHasValidDimensions(i) ? i : std::vector<std::vector<Interval>>{})
+    : intervalsPattern(patternHasTriangularDimensions(i) ? i : std::vector<std::vector<Interval>>{})
 {
 }
 
 Scale::Scale(const std::vector<std::vector<Interval>>& i, const std::string& n)
-    : intervalsPattern(intervalsPatternHasValidDimensions(i) ? i : std::vector<std::vector<Interval>>{})
+    : intervalsPattern(patternHasTriangularDimensions(i) ? i : std::vector<std::vector<Interval>>{})
     , name(n)
 {
 }
@@ -23,7 +28,7 @@ inline size_t Scale::size() const
 
 void Scale::setIntervalsPattern(const std::vector<std::vector<Interval>>& newIntervalsPattern)
 {
-    if (intervalsPatternHasValidDimensions(newIntervalsPattern))
+    if (patternHasTriangularDimensions(newIntervalsPattern))
     {
         intervalsPattern = newIntervalsPattern;
         setDummyIndecies({});
@@ -195,8 +200,13 @@ std::vector<double> Scale::insertDummyNotes(std::vector<double>& tuning) const
 
     auto insertionAdjustment{ 0 };
 
-    for (auto& index : dummyIndecies)
-        tuning.insert(tuning.begin() + index + insertionAdjustment++, -1);
+    for (const auto& index : dummyIndecies)
+        if (index + insertionAdjustment >= 0 && index < tuning.size())
+        {
+            tuning.insert(tuning.begin() + index + insertionAdjustment, std::numeric_limits<double>::quiet_NaN());
+
+            ++insertionAdjustment;
+        }
 
     return tuning;
 }

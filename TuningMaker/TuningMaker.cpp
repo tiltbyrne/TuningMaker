@@ -3,30 +3,6 @@
 
 static constexpr size_t maxMidiNotes{ 128 };
 
-static void initialisePitchSpaceScales()
-{
-    auto& sevenEDO{ PitchSpaces::fractional.at("7edo") };
-
-    sevenEDO.addSigniature("neutral pentatonic A", { 0, 1, 3, 4, 6 });
-    sevenEDO.addSigniature("neutral pentatonic B", { 0, 2, 3, 5, 6 });
-
-    auto& twelveEDO{ PitchSpaces::fractional.at("12edo") };
-
-    twelveEDO.addSigniature("major pentatonic", { 0, 2, 4, 7, 9 });
-    twelveEDO.addSigniature("minor pentatonic", { 0, 3, 4, 7, 10 });
-    twelveEDO.addSigniature("ionian", { 0, 2, 4, 5, 7, 9, 11 });
-    twelveEDO.addSigniature("dorian", { 0, 2, 3, 5, 7, 9, 10 });
-    twelveEDO.addSigniature("phrygian", { 0, 1, 3, 5, 7, 8, 10 });
-    twelveEDO.addSigniature("lydian", { 0, 2, 4, 6, 7, 9, 11 });
-    twelveEDO.addSigniature("myxolydian", { 0, 2, 4, 5, 7, 9, 10 });
-    twelveEDO.addSigniature("aolian", { 0, 2, 3, 5, 7, 8, 10 });
-    twelveEDO.addSigniature("locrian", { 0, 1, 3, 5, 6, 8, 10 });
-
-    auto& twentytwoEDO{ PitchSpaces::fractional.at("22edo") };
-
-    twentytwoEDO.addSigniature("orwell9", { 0, 3, 5, 8, 10, 13, 15, 18, 20 });
-}
-
 template<typename Relation>
 static void addCustomScaleToPitchSpace(PitchSpace<Relation>& pitchSpace, const std::string& scaleName)
 {
@@ -36,6 +12,7 @@ static void addCustomScaleToPitchSpace(PitchSpace<Relation>& pitchSpace, const s
     while (true)
     {
         std::cin >> inputLine;
+
         if (inputLine == "end")
             break;
 
@@ -43,6 +20,7 @@ static void addCustomScaleToPitchSpace(PitchSpace<Relation>& pitchSpace, const s
         scaleSigniature.push_back(relation);
     }
 
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     pitchSpace.addSigniature(scaleName, scaleSigniature);
 }
 
@@ -55,6 +33,7 @@ static void addCustomDecimalPitchSpace(const std::string& pitchSpaceName)
     while (true)
     {
         std::cin >> inputLine;
+
         if (inputLine == "end")
             break;
 
@@ -62,6 +41,7 @@ static void addCustomDecimalPitchSpace(const std::string& pitchSpaceName)
         relationsTable.push_back(decimalValue);
     }
 
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     PitchSpaces::decimal.insert({ pitchSpaceName, relationsTable });
 }
 
@@ -73,6 +53,7 @@ static void addCustomFractionalPitchSpace(const std::string& pitchSpaceName)
     while (true)
     {
         std::cin >> inputLine;
+
         if (inputLine == "end")
             break;
         const auto separatorPosition{ inputLine.find('/') };
@@ -91,6 +72,7 @@ static void addCustomFractionalPitchSpace(const std::string& pitchSpaceName)
         }
     }
 
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     PitchSpaces::fractional.insert({ pitchSpaceName, relationsTable });
 }
 
@@ -102,30 +84,33 @@ static void printTuning(const std::vector<double>& tuning)
     {
         const auto& factor{ tuning[note] };
 
-        if (factor >= 0)
-            std::cout << '\n' << std::setprecision(4) << factor;
+        if (std::isnan(factor))
+            std::cout << '\n' << "0.0001";
         else
-            std::cout << '\n' << "999999999999999";
+            std::cout << '\n' << std::setprecision(4) << factor;
     }
 
-	std::cout << '\n' << "999999999999999" << std::endl << std::endl << "As cents: " << std::endl << std::endl;
+	std::cout << std::endl << std::endl << "As cents: " << std::endl << std::endl;
 
     for (auto note{ 0 }; note != tuning.size(); ++note)
     {
 		std::cout << std::fixed << note << ") ";
-        const auto& cents{ centsFromRatio(tuning[note]) };
 
-        if (!std::isnan(cents))
-            std::cout << std::setprecision(4) << cents;
-        std::cout << "\n\n";
+        const auto& factor{ tuning[note] };
+
+        if (!std::isnan(factor))
+            std::cout << std::setprecision(4) << centsFromRatio(tuning[note]);
+
+        std::cout << '\n';
     }
 }
 
 int main()
 {
-    initialisePitchSpaceScales();
+    PitchSpaces::initialisePitchSpaceScales();
 
-    std::cout << "Do you want to use a decimal or fractional pitch space? ";
+    std::cout << "Welcome to Tuning Maker. To make a tuning of a scale you must first choose the pitch space it occupies. "
+        << "Do you want to use a decimal or fractional pitch space? ";
 
     char pitchSpaceType;
 
@@ -162,6 +147,7 @@ int main()
 
     std::string pitchSpaceName;
     std::cin >> pitchSpaceName;
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
     std::cout << std::endl;
 
@@ -206,6 +192,7 @@ int main()
 
     std::string scaleName;
     std::cin >> scaleName;
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
     switch (pitchSpaceType)
     {
@@ -232,30 +219,37 @@ int main()
 	std::cout << std::endl << "Your chosen scale is: " << std::endl << std::endl
         << "[" << pitchSpaceName << "]-";
 
+    int scaleLength;
+
     switch (pitchSpaceType)
     {
     case 'd':
         PitchSpaces::decimal.at(pitchSpaceName).printSigniature(scaleName);
+        scaleLength = PitchSpaces::decimal.at(pitchSpaceName).getSigniature(scaleName).value().size();
         break;
     case 'f':
         PitchSpaces::fractional.at(pitchSpaceName).printSigniature(scaleName);
+        scaleLength = PitchSpaces::fractional.at(pitchSpaceName).getSigniature(scaleName).value().size();
         break;
     default:
         break;
     }
 
-    std::cout << std::endl << std::endl << "Enter the range of the final tuning of this scale: ";
+    std::cout << std::endl << std::endl << "Enter the range of the final tuning of this scale "
+        << "(hint: this scale contains " << scaleLength << " notes): ";
 
     int range;
     std::cin >> range;
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
     if (range < 1)
         range = 1;
 
-    std::cout << std::endl << "Enter the root note of the final tuning of this scale: ";
+    std::cout << std::endl << "Enter the index of the root note of the final tuning of this scale [0, " << range << "): ";
 
     int trueRootNote;
     std::cin >> trueRootNote;
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
     if (trueRootNote < 0)
         trueRootNote = 0;
@@ -273,8 +267,8 @@ int main()
     {
         std::cout << "Enter 'y' for yes or 'n' for no: ";
         std::cin >> wantsDummyNotes;
-
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
         if (wantsDummyNotes == 'y' || wantsDummyNotes == 'n')
         {
             break;
@@ -292,7 +286,7 @@ int main()
         const auto relationsTable{ PitchSpaces::decimal.at(pitchSpaceName).makeRangedScaleRelations(scaleName, range) };
         if (relationsTable.has_value())
         {
-            scale = Scale(rangedScaleLongDoubleToIntervalsWithUniformWeight(relationsTable.value()),
+            scale = Scale(IntervalPatternMakers::rangedScaleLongDoubleToIntervalsWithUniformWeight(relationsTable.value()),
                           scaleNameFull);
 
             if (wantsDummyNotes == 'y')
@@ -304,12 +298,14 @@ int main()
         const auto relationsTable{ PitchSpaces::fractional.at(pitchSpaceName).makeRangedScaleRelations(scaleName, range) };
         if (relationsTable.has_value())
         {
-            std::cout << std::endl << "Enter the exponent of the Tenney height used to calculate each interval's weight (hint: larger values produce tunings with more accurate approximations of 'simple' intervals and 0 treats all intervals equally): ";
+            std::cout << std::endl << "Enter the exponent of the Tenney height used to calculate each interval's weight "
+                << "(hint: larger values can produce tunings with more relatively accurate approximations of 'simple' intervals and 0 treats all intervals equally) : ";
 
             long double enropyCurve;
             std::cin >> enropyCurve;
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
-            scale = Scale(rangedScaleFractionsToIntervalsWithTenneyWeight(relationsTable.value(), enropyCurve),
+            scale = Scale(IntervalPatternMakers::rangedScaleFractionsToIntervalsWithTenneyWeight(relationsTable.value(), enropyCurve),
                           scaleNameFull);
 
             if (wantsDummyNotes == 'y')
@@ -321,6 +317,7 @@ int main()
 
     long double weightLimit;
 	std::cin >> weightLimit;
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
     if (weightLimit < 0)
 		weightLimit = 0;

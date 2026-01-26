@@ -1,5 +1,11 @@
 #include "Fraction.h"
 
+Fraction::Fraction()
+    : numerator{ 1 }
+    , denominator{ 1 }
+{
+}
+
 Fraction::Fraction(const int& n, const int& d)
     : numerator(n), denominator(d == 0 ? 1 : d)
 {
@@ -37,6 +43,12 @@ long double Fraction::toLongDouble() const
 bool Fraction::operator<(const Fraction& otherFraction) const
 {
 	return (numerator * otherFraction.denominator) < (otherFraction.numerator * denominator);
+}
+
+bool Fraction::operator==(const Fraction& otherFraction) const
+{
+    return (numerator == otherFraction.numerator &&
+            denominator == otherFraction.denominator);
 }
 
 Fraction Fraction::operator*(const Fraction& otherFraction) const
