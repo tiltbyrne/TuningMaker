@@ -85,7 +85,7 @@ static void printTuning(const std::vector<double>& tuning)
         const auto& factor{ tuning[note] };
 
         if (std::isnan(factor))
-            std::cout << '\n' << "0.0001";
+            std::cout << '\n' << "0.00001";//this value is well out of human hearing range
         else
             std::cout << '\n' << std::setprecision(4) << factor;
     }
@@ -299,7 +299,8 @@ int main()
         if (relationsTable.has_value())
         {
             std::cout << std::endl << "Enter the exponent of the Tenney height used to calculate each interval's weight "
-                << "(hint: larger values can produce tunings with more relatively accurate approximations of 'simple' intervals and 0 treats all intervals equally): ";
+                << "(hint: larger values can produce tunings with more accurate approximations of simple intervals at "
+                << "the expense of the accuratcy of more complex ones. Exponent = 0 treats all intervals equally): ";
 
             long double enropyCurve;
             std::cin >> enropyCurve;
@@ -313,7 +314,7 @@ int main()
         }
     }
 
-	std::cout << std::endl << "Enter the weight limit (between 0 and 1) for tuning calculations (hint: smaller values produce more accurate tunings but take longer to compute): ";
+	std::cout << std::endl << "Enter the cutoff weight (between 0 and 1) for tuning calculations (hint: smaller values produce more accurate tunings but take longer to compute): ";
 
     long double weightLimit;
 	std::cin >> weightLimit;

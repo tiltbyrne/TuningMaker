@@ -116,9 +116,31 @@ Interval Scale::getInterval(const int& noteTo, const int& noteFrom) const
     return intervalsPattern[noteFrom][noteTo - noteFrom - 1];
 }
 
-std::vector<double> Scale::tuneScale(const int& trueRootNote, const long double& weightLimit) const
+long double Scale::getMinWeight() const
 {
-    auto tunings{ makePopulatedTunings(weightLimit) };
+    auto minWeight{ intervalsPattern[0][0].getWeight() };
+    for (const auto& row : intervalsPattern)
+        for (const auto& interval : row)
+            if (interval.getWeight() < minWeight)
+                minWeight = interval.getWeight();
+
+    return minWeight;
+}
+
+long double Scale::getMaxWeight() const
+{
+    auto maxWeight{ intervalsPattern[0][0].getWeight() };
+    for (const auto& row : intervalsPattern)
+        for (const auto& interval : row)
+            if (interval.getWeight() > maxWeight)
+                maxWeight = interval.getWeight();
+
+    return maxWeight;
+}
+
+std::vector<double> Scale::tuneScale(const int& trueRootNote, const long double& weightCutoff) const
+{
+    auto tunings{ makePopulatedTunings(weightCutoff) };
 
     auto tuning{ normaliseTuningsAndMakeAverageTuning(tunings, trueRootNote) };
 
@@ -135,7 +157,7 @@ long double Scale::sumWeights(const int& noteTo, std::vector<int>& notesFrom) co
     return sum;
 }
 
-long double Scale::makeTuning(const int& rootNote, int& note, const long double& weightLimit) const
+long double Scale::makeTuning(const int& rootNote, int& note, const long double& weightCutoff) const
 {
     long double tunedNote{ 1 };
 
@@ -148,11 +170,11 @@ long double Scale::makeTuning(const int& rootNote, int& note, const long double&
 
     const auto firstRollingWeight{ 1 / sumWeights(note, nextNotes) };
 
-    return traverseScale(note, nextNotes, rootNote, firstRollingWeight, weightLimit, firstRollingWeight);
+    return traverseScale(note, nextNotes, rootNote, firstRollingWeight, weightCutoff, firstRollingWeight);
 }
 
 long double Scale::traverseScale(int& lastNote, std::vector<int>& possibleNextNotesInPath,
-    const int& rootNote, const long double& rollingWeight, const long double& weightLimit, 
+    const int& rootNote, const long double& rollingWeight, const long double& weightCutoff,
     const long double& possibleWeightsToNoteSum) const
 {
     long double returnValue{ 1 };
@@ -162,7 +184,7 @@ long double Scale::traverseScale(int& lastNote, std::vector<int>& possibleNextNo
         const auto nextNote{ possibleNextNotesInPath[nextNoteIndex] };
         const auto nextInterval{ getInterval(lastNote, nextNote) };
 
-        if (nextNote == rootNote || nextInterval.getWeight() * rollingWeight <= weightLimit)
+        if (nextNote == rootNote || nextInterval.getWeight() * rollingWeight <= weightCutoff)
             returnValue *= std::pow(getInterval(lastNote, rootNote).getSize(), nextInterval.getWeight() * possibleWeightsToNoteSum);
         else
         {
@@ -173,8 +195,14 @@ long double Scale::traverseScale(int& lastNote, std::vector<int>& possibleNextNo
 
             const auto sumWeightsToNextNote{ 1 / sumWeights(nextNote, possibleNextNotesInPath) };
 
-            returnValue *= std::pow(nextInterval.getSize() * traverseScale(lastNote, possibleNextNotesInPath, rootNote,
-                                                           nextInterval.getWeight() * rollingWeight * sumWeightsToNextNote, weightLimit, sumWeightsToNextNote),
+            returnValue *= std::pow(nextInterval.getSize() * traverseScale(lastNote,
+                                                                           possibleNextNotesInPath,
+                                                                           rootNote,
+                                                                           clampLongDoubleToLimits(nextInterval.getWeight() *
+                                                                                                   rollingWeight *
+                                                                                                   sumWeightsToNextNote),
+                                                                           weightCutoff,
+                                                                           sumWeightsToNextNote),
                                     nextInterval.getWeight() * possibleWeightsToNoteSum);
 
             possibleNextNotesInPath.insert(possibleNextNotesInPath.begin() + nextNoteIndex, lastNote);
@@ -185,7 +213,7 @@ long double Scale::traverseScale(int& lastNote, std::vector<int>& possibleNextNo
     return returnValue;
 }
 
-std::vector<std::vector<long double>> Scale::makePopulatedTunings(const long double& weightLimit) const
+std::vector<std::vector<long double>> Scale::makePopulatedTunings(const long double& weightCutoff) const
 {
     auto percentTuned{ [this](int& rootNote, int& note) -> long double
         {
@@ -205,7 +233,7 @@ std::vector<std::vector<long double>> Scale::makePopulatedTunings(const long dou
     for (auto rootNote{ 0 }; rootNote != size(); ++rootNote)
         for (auto note{ 0 }; note != size(); ++note)
         {
-            tunings[rootNote][note] = rootNote == note ? 1 : makeTuning(rootNote, note, weightLimit);
+            tunings[rootNote][note] = rootNote == note ? 1 : makeTuning(rootNote, note, weightCutoff);
 
             const auto percentage{ percentTuned(rootNote, note) };
 
@@ -265,11 +293,7 @@ std::vector<double> Scale::insertDummyNotes(std::vector<double>& tuning) const
 */
 void Scale::normaliseWeights()
 {
-    long double maxWeight{ 0 };
-    for (const auto& row : intervalsPattern)
-        for (const auto& Interval : row)
-            if (Interval.getWeight() > maxWeight)
-                maxWeight = Interval.getWeight();
+    long double maxWeight{ getMaxWeight() };
 
     for (auto& row : intervalsPattern)
         for (auto& Interval : row)

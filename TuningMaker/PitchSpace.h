@@ -10,7 +10,7 @@ using ScaleSigniature = std::vector<int>;
 
 /*
   A PitchSpace represents the total pitch materials which a scale could be constructed from (think of all
-  the different scales "contained" in the chromatic 12edo pitch space). Pitch space stores this information
+  the different scales which "belong" in the chromatic 12edo pitch space). Pitch space stores this information
   as an array of Relations, as well as a map of named scale signiatures, which store the indecies of the
   notes in the pitch space from which that scale is constructed.
 */
@@ -232,12 +232,12 @@ public:
 
 private:
     /*
-      Contains all relations between notes at a given distance which defines the pitch space.
+      Contains all relations between notes at a for one repetition of the pitch space.
     */
     std::vector<Relation> table;
 
     /*
-      Stores named scales which are contained in the pitch space.
+      Stores named scales which belong to the pitch space.
     */
     std::map<std::string, ScaleSigniature> scaleSigniatures;
 
@@ -409,13 +409,13 @@ namespace PitchSpaces
     {
         auto& sevenEDO{ PitchSpaces::fractional.at("7edo") };
 
-        sevenEDO.addSigniature("neutral pentatonic A", { 0, 1, 3, 4, 6 });
-        sevenEDO.addSigniature("neutral pentatonic B", { 0, 2, 3, 5, 6 });
+        sevenEDO.addSigniature("neutral_pentatonic_A", { 0, 1, 3, 4, 6 });
+        sevenEDO.addSigniature("neutral_pentatonic_B", { 0, 2, 3, 5, 6 });
 
         auto& twelveEDO{ PitchSpaces::fractional.at("12edo") };
 
-        twelveEDO.addSigniature("major pentatonic", { 0, 2, 4, 7, 9 });
-        twelveEDO.addSigniature("minor pentatonic", { 0, 3, 4, 7, 10 });
+        twelveEDO.addSigniature("major_pentatonic", { 0, 2, 4, 7, 9 });
+        twelveEDO.addSigniature("minor_pentatonic", { 0, 3, 4, 7, 10 });
         twelveEDO.addSigniature("ionian", { 0, 2, 4, 5, 7, 9, 11 });
         twelveEDO.addSigniature("dorian", { 0, 2, 3, 5, 7, 9, 10 });
         twelveEDO.addSigniature("phrygian", { 0, 1, 3, 5, 7, 8, 10 });

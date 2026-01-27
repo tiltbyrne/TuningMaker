@@ -129,11 +129,21 @@ public:
     inline std::string getName() const;
 
     /*
+      Returns the smallest weight of all intervals in the scale. 
+    */
+    long double getMinWeight() const;
+
+    /*
+      Returns the greatest weight of all intervals in the scale.
+    */
+    long double getMaxWeight() const;
+
+    /*
       Produces a tuning of the scale. The tuning of the note at index = trueRootNote will always equal 1f
-      Depending on the size of the scale and the weights of it's intervals weightLimit can have a large
+      Depending on the size of the scale and the weights of it's intervals weightCutoff can have a large
       influence on the time it takes for this function to return.
     */
-    std::vector<double> tuneScale(const int& trueRootNote, const long double& weightLimit = 0) const;
+    std::vector<double> tuneScale(const int& trueRootNote, const long double& weightCutoff = 0) const;
 
 private:
     /*
@@ -165,22 +175,22 @@ private:
     /*
       Calculates the tuning of a single note for a scale, assuming a single rootNote.
     */
-    long double makeTuning(const int& rootNote, int& note, const long double& weightLimit) const;
+    long double makeTuning(const int& rootNote, int& note, const long double& weightCutoff) const;
 
     /*
       Iteratively traverses across the scale as if it were a graph. Iteration is broken by either finding a
-      path which originates at rootNote, or arriving at a path whose rollingWeight <= weightLimit. Being that
+      path which originates at rootNote, or arriving at a path whose rollingWeight <= weightCutoff. Being that
       this function is called many times, it could be a sensible place to begin optimisation.
     */
     long double traverseScale(int& lastNote, std::vector<int>& possibleNextNotesInPath, const int& rootNote,
-                              const long double& rollingWeight, const long double& weightLimit,
+                              const long double& rollingWeight, const long double& weightCutoff,
                               const long double& possibleWeightsToNoteSum) const;
     
     /*
       Manages calls to makeTuning() for all possible notes and rootNotes, populates size() number of tunings
       for each note in the scale, and tracks progress of this calculation.
     */
-    std::vector<std::vector<long double>> makePopulatedTunings(const long double& weightLimit) const;
+    std::vector<std::vector<long double>> makePopulatedTunings(const long double& weightCutoff) const;
 
     /*
       Produces a tuning of the scale from the tunings produced by makePopulatedTunings(), normalised and averaged
