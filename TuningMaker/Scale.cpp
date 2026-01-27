@@ -56,14 +56,14 @@ Scale::Scale(const std::string& n)
 {
 }
 
-Scale::Scale(const std::vector<std::vector<Interval>>& i)
-    : intervalsPattern(patternHasTriangularDimensions(i) ? i : std::vector<std::vector<Interval>>{})
+Scale::Scale(const IntervalsPattern& i)
+    : intervalsPattern(patternHasTriangularDimensions(i) ? i : IntervalsPattern{})
 {
     normaliseWeights();
 }
 
-Scale::Scale(const std::vector<std::vector<Interval>>& i, const std::string& n)
-    : intervalsPattern(patternHasTriangularDimensions(i) ? i : std::vector<std::vector<Interval>>{})
+Scale::Scale(const IntervalsPattern& i, const std::string& n)
+    : intervalsPattern(patternHasTriangularDimensions(i) ? i : IntervalsPattern{})
     , name(n)
 {
     normaliseWeights();
@@ -74,7 +74,7 @@ inline size_t Scale::size() const
     return intervalsPattern.size() + 1;
 }
 
-void Scale::setIntervalsPattern(const std::vector<std::vector<Interval>>& newIntervalsPattern)
+void Scale::setIntervalsPattern(const IntervalsPattern& newIntervalsPattern)
 {
     if (patternHasTriangularDimensions(newIntervalsPattern))
     {
@@ -288,9 +288,6 @@ std::vector<double> Scale::insertDummyNotes(std::vector<double>& tuning) const
     return tuning;
 }
 
-/*
-  Normalises the weights of all intervals in intervalsPattern to a range of (0, 1].
-*/
 void Scale::normaliseWeights()
 {
     long double maxWeight{ getMaxWeight() };

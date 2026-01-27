@@ -64,6 +64,8 @@ private:
     void manageZeroWeight();
 };
 
+using IntervalsPattern = std::vector<std::vector<Interval>>;
+
 /*
   A Scale represents a collection of notes as the ideal pattern intervals between those notes.
   It also contains the logic necessary to produce a tuning of itself, output by tuneScale().
@@ -90,14 +92,14 @@ public:
       (defined by patternHasTriangularDimensions() function in Utilities.h) then the pattern is
       default
     */
-    Scale(const std::vector<std::vector<Interval>>& i);
+    Scale(const IntervalsPattern& i);
 
     /*
        Constructs a named scale with intervals pattern i. If i has non-triangular dimensions
        (defined by patternHasTriangularDimensions() function in Utilities.h) then the pattern is
        default.
     */
-    Scale(const std::vector<std::vector<Interval>>& i, const std::string& n);
+    Scale(const IntervalsPattern& i, const std::string& n);
 
     /*
       Returns the number of notes in the scale.
@@ -108,7 +110,7 @@ public:
       Sets intervalsPattern to newIntervalsPattern if it has triangular dimensions, (defined by
       patternHasTriangularDimensions() function in Utilities.h).
     */
-    void setIntervalsPattern(const std::vector<std::vector<Interval>>& newIntervalsPattern);
+    void setIntervalsPattern(const IntervalsPattern& newIntervalsPattern);
 
     /*
       Sets the dummy notes of the scale. In tuning of the scale produced by tuneScale, dummy note
@@ -151,7 +153,7 @@ private:
       the reciporical of the interval between B and A. The weight of both intervals is the same. So,
       we only need to store the interval between A and B for any value of A or B.
     */
-    std::vector<std::vector<Interval>> intervalsPattern;
+    IntervalsPattern intervalsPattern;
     /*
       The indecies of intervals which will always be tuned NaN in tuneScale().
     */
@@ -205,8 +207,7 @@ private:
     std::vector<double> insertDummyNotes(std::vector<double>& tuning) const;
 
     /*
-      Normalises the weights of all intervals in pattern to a range of [0, 1]. Does not check if maxWeight
-      trully is the greatest value in the pattern.
+      Normalises the weights of all intervals in intervalsPattern to a range of (0, 1].
     */
     void normaliseWeights();
 };
@@ -215,8 +216,6 @@ private:
 //All functions in this namespace should return an IntervalPattern which can be used by Scale objects.
 namespace IntervalPatternMakers
 {
-    using IntervalsPattern = std::vector<std::vector<Interval>>;
-
     /*
       Produces an IntervalsPattern where all intervals have a weight equal to one over the product of the
       numerator and denominator (their Tenney Weight), raised to the power of entropyCurve.
