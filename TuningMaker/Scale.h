@@ -80,26 +80,26 @@ public:
     /*
       Constructs a nameless scale with a default intervals pattern.
     */
-    Scale();
+    Scale(const long double& c = 0);
 
     /*
       Constructs a named scale with a default intervals pattern.
     */
-    Scale(const std::string& n);
+    Scale(const std::string& n, const long double& c = 0);
 
     /*
       Constructs a nameless scale with intervals pattern i. If i has non-triangular dimensions
       (defined by patternHasTriangularDimensions() function in Utilities.h) then the pattern is
       default
     */
-    Scale(const IntervalsPattern& i);
+    Scale(const IntervalsPattern& i, const long double& c = 0);
 
     /*
        Constructs a named scale with intervals pattern i. If i has non-triangular dimensions
        (defined by patternHasTriangularDimensions() function in Utilities.h) then the pattern is
        default.
     */
-    Scale(const IntervalsPattern& i, const std::string& n);
+    Scale(const IntervalsPattern& i, const std::string& n, const long double& c = 0);
 
     /*
       Returns the number of notes in the scale.
@@ -118,7 +118,7 @@ public:
       the indecies of dummy notes are independent of intervalsPattern and invalid dummy indecies
       will not be inserted into the final tuning.
     */
-    void setDummyIndecies(const std::vector<int>& newDummyIntervals);
+    void setDummyIndecies(const std::vector<int>& newDummyIndecies);
 
     /*
       Resets the name of the scale.
@@ -131,6 +131,16 @@ public:
     inline std::string getName() const;
 
     /*
+      Returns the weight at which scale traversal will be cut off.
+    */
+    long double getWeightCutoff() const;
+
+    /*
+      Sets the weight at which scale traversal will be cut off.
+    */
+    void setWeightCutoff(const long double& newWeightCutoff);
+
+    /*
       Returns the smallest weight of all intervals in the scale. 
     */
     long double getMinWeight() const;
@@ -141,11 +151,11 @@ public:
     long double getMaxWeight() const;
 
     /*
-      Produces a tuning of the scale. The tuning of the note at index = trueRootNote will always equal 1f
+      Produces a tuning of the scale. The tuning of the note at index = rootNote will always equal 1f
       Depending on the size of the scale and the weights of it's intervals weightCutoff can have a large
       influence on the time it takes for this function to return.
     */
-    std::vector<double> tuneScale(const int& trueRootNote, const long double& weightCutoff = 0) const;
+    std::vector<float> tuneScale(const int& rootNote) const;
 
 private:
     /*
@@ -164,47 +174,56 @@ private:
     std::string name;
 
     /*
+      The total weight of an interval tuning a note at which scale traversal will be halted and that interval
+      will be replaced by an interval from note 0 to the note at the index of that interval.
+    */
+    long double weightCutoff;
+
+    /*
       Accesses or calculates the value of the interval from noteFrom to noteTo depending on whether or not
       it is contained in intervalsPattern.
     */
     Interval getInterval(const int& noteTo, const int& noteFrom) const;
 
     /*
-      Returns the sum of all notes in notesFrom to noteTo. This is a useful value for tuning calculation.
+      Returns the product of all notes in notesFrom to noteTo.
     */
-    long double sumWeights(const int& noteTo, std::vector<int>& notesFrom) const;
+    long double prodWeights(const int& noteFrom, const std::vector<int>& notesTo) const;
+
+    /*
+      Returns the sum of the product of all notes in notesFrom to eachother.
+    */
+    long double sumProdWeights(const std::vector<int>& notesFrom) const;
 
     /*
       Calculates the tuning of a single note for a scale, assuming a single rootNote.
     */
-    long double makeTuning(const int& rootNote, int& note, const long double& weightCutoff) const;
+    long double tuneNote(int& note) const;
 
     /*
-      Iteratively traverses across the scale as if it were a graph. Iteration is broken by either finding a
-      path which originates at rootNote, or arriving at a path whose rollingWeight <= weightCutoff. Being that
+      Iteratively traverses across the scale as if it were a graph. Iteration is halted by either finding a
+      path which originates at 0, or arriving at a path whose rollingWeight < weightCutoff. Being that
       this function is called many times, it could be a sensible place to begin optimisation.
     */
-    long double traverseScale(int& lastNote, std::vector<int>& possibleNextNotesInPath, const int& rootNote,
-                              const long double& rollingWeight, const long double& weightCutoff,
-                              const long double& possibleWeightsToNoteSum) const;
+    long double traversePath(const int& currentNoteIndex, const std::vector<int>& possibleNextNotes,
+                             const long double& rollingWeight, const long double& reciporicalSumOfProdWeights) const;
     
     /*
-      Manages calls to makeTuning() for all possible notes and rootNotes, populates size() number of tunings
-      for each note in the scale, and tracks progress of this calculation.
+      Manages calls to makeTuning() for all notes and tracks progress of this calculation.
     */
-    std::vector<std::vector<long double>> makePopulatedTunings(const long double& weightCutoff) const;
+    std::vector<long double> makePopulatedTuning() const;
 
     /*
-      Produces a tuning of the scale from the tunings produced by makePopulatedTunings(), normalised and averaged
-      such that the tuning of the note at index trueRootNote equals 1f
+      Adjusts the relationships in the tuning such that the tuning of the note in tuning at
+      rootNoteIndex equals 1.
     */
-    std::vector<double> normaliseTuningsAndMakeAverageTuning(std::vector<std::vector<long double>>& tunings,
-                                                                  const int& trueRootNote) const;
+    void adjustTuningRootNote(std::vector<long double>& tuning,
+                              const int& rootNoteIndex) const;
 
     /*
       Inserts NaN at the indecies contained in dummyIndecies if those intervals are valid.
     */
-    std::vector<double> insertDummyNotes(std::vector<double>& tuning) const;
+    std::vector<float> insertDummyNotes(const std::vector<long double>& tuning) const;
 
     /*
       Normalises the weights of all intervals in intervalsPattern to a range of (0, 1].

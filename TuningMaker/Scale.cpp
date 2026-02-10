@@ -47,24 +47,28 @@ void Interval::manageZeroWeight()
         weight = std::numeric_limits<long double>::lowest();
 }
 
-Scale::Scale()
+Scale::Scale(const long double& c)
+    : weightCutoff(c < 0 ? 0 : c > 1 ? 1 : c)
 {
 }
 
-Scale::Scale(const std::string& n)
+Scale::Scale(const std::string& n, const long double& c)
     : name(n)
+    , weightCutoff(c < 0 ? 0 : c > 1 ? 1 : c)
 {
 }
 
-Scale::Scale(const IntervalsPattern& i)
+Scale::Scale(const IntervalsPattern& i, const long double& c)
     : intervalsPattern(patternHasTriangularDimensions(i) ? i : IntervalsPattern{})
+    , weightCutoff(c < 0 ? 0 : c > 1 ? 1 : c)
 {
     normaliseWeights();
 }
 
-Scale::Scale(const IntervalsPattern& i, const std::string& n)
+Scale::Scale(const IntervalsPattern& i, const std::string& n, const long double& c)
     : intervalsPattern(patternHasTriangularDimensions(i) ? i : IntervalsPattern{})
     , name(n)
+    , weightCutoff(c < 0 ? 0 : c > 1 ? 1 : c)
 {
     normaliseWeights();
 }
@@ -104,6 +108,19 @@ inline std::string Scale::getName() const
     return name;
 }
 
+
+long double Scale::getWeightCutoff() const
+{
+    return weightCutoff;
+}
+
+void Scale::setWeightCutoff(const long double& newWeightCutoff)
+{
+    weightCutoff = newWeightCutoff < 0 ? 0
+                                       : newWeightCutoff > 1 ? 1
+                                                             : newWeightCutoff;
+}
+
 Interval Scale::getInterval(const int& noteTo, const int& noteFrom) const
 {
     if (noteFrom > noteTo)
@@ -111,7 +128,7 @@ Interval Scale::getInterval(const int& noteTo, const int& noteFrom) const
                  intervalsPattern[noteTo][noteFrom - noteTo - 1].getWeight() };
 
     if (noteTo == noteFrom)
-        return { 1, 0 };
+        return { 1, 1 };
 
     return intervalsPattern[noteFrom][noteTo - noteFrom - 1];
 }
@@ -138,91 +155,93 @@ long double Scale::getMaxWeight() const
     return maxWeight;
 }
 
-std::vector<double> Scale::tuneScale(const int& trueRootNote, const long double& weightCutoff) const
+std::vector<float> Scale::tuneScale(const int& rootNote) const
 {
-    auto tunings{ makePopulatedTunings(weightCutoff) };
+    auto tuning{ makePopulatedTuning() };
 
-    auto tuning{ normaliseTuningsAndMakeAverageTuning(tunings, trueRootNote) };
+    adjustTuningRootNote(tuning, (rootNote < 0 ? 0 : rootNote >= size() ? size() - 1 : rootNote));
 
     return insertDummyNotes(tuning);
 }
 
-long double Scale::sumWeights(const int& noteTo, std::vector<int>& notesFrom) const
+long double Scale::prodWeights(const int& noteFrom, const std::vector<int>& notesTo) const
+{
+    if (notesTo.empty())
+        return 0;
+
+    long double prod{ 1 };
+
+    for (const auto& noteTo : notesTo)
+        prod *= getInterval(noteFrom, noteTo).getWeight();
+
+    return clampLongDoubleToLimits(prod);
+}
+
+long double Scale::sumProdWeights(const std::vector<int>& notesFrom) const
 {
     long double sum{ 0 };
 
-    for (auto& noteFrom : notesFrom)
-        sum += getInterval(noteTo, noteFrom).getWeight();
+    for (const auto& noteFrom : notesFrom)
+        sum += prodWeights(noteFrom, notesFrom);
 
     return sum;
 }
 
-long double Scale::makeTuning(const int& rootNote, int& note, const long double& weightCutoff) const
+long double Scale::tuneNote(int& note) const
 {
-    long double tunedNote{ 1 };
-
-    long double adjustmentFactor{ 1 };
-    bool adjustmentFactorWasSet{ false };
+    if (note == 0)
+        return 1;
 
     std::vector<int> nextNotes(size());
     std::iota(nextNotes.begin(), nextNotes.end(), 0);
-    nextNotes.erase(find(nextNotes.begin(), nextNotes.end(), note));
 
-    const auto firstRollingWeight{ 1 / sumWeights(note, nextNotes) };
+    const auto reciporicalSumOfProdWeights{ 1 / sumProdWeights(nextNotes) };
 
-    return traverseScale(note, nextNotes, rootNote, firstRollingWeight, weightCutoff, firstRollingWeight);
+    return traversePath(note, nextNotes, 1, reciporicalSumOfProdWeights);
 }
 
-long double Scale::traverseScale(int& lastNote, std::vector<int>& possibleNextNotesInPath,
-    const int& rootNote, const long double& rollingWeight, const long double& weightCutoff,
-    const long double& possibleWeightsToNoteSum) const
+long double Scale::traversePath(const int& currentNoteIndex, const std::vector<int>& possibleNextNotes,
+    const long double& rollingWeight, const long double& reciporicalSumOfProdWeights) const
 {
+    const auto currentNote{ possibleNextNotes[currentNoteIndex] };
+
+    auto nextPossibleNextNotes{ possibleNextNotes };
+    nextPossibleNextNotes.erase(nextPossibleNextNotes.begin() + currentNoteIndex);
+
+    const auto nextReciporicalSumProdWeights{ 1 / sumProdWeights(nextPossibleNextNotes) };
+
     long double returnValue{ 1 };
 
-    for (auto nextNoteIndex{ 0 }; nextNoteIndex != possibleNextNotesInPath.size(); ++nextNoteIndex)
+    for (auto nextNoteIndex{ 0 }; nextNoteIndex != possibleNextNotes.size(); ++nextNoteIndex)
     {
-        const auto nextNote{ possibleNextNotesInPath[nextNoteIndex] };
-        const auto nextInterval{ getInterval(lastNote, nextNote) };
+        const auto nextNote{ possibleNextNotes[nextNoteIndex] };
+        const auto exponent{ clampLongDoubleToLimits(prodWeights(nextNote, possibleNextNotes) * reciporicalSumOfProdWeights) };
 
-        if (nextNote == rootNote || nextInterval.getWeight() * rollingWeight <= weightCutoff)
-            returnValue *= std::pow(getInterval(lastNote, rootNote).getSize(), nextInterval.getWeight() * possibleWeightsToNoteSum);
-        else
-        {
-            const auto initialLastNote{ lastNote };
+        const auto intervalSize{ (nextNote == 0 || nextNote == currentNote || exponent * rollingWeight <= weightCutoff)
+            ? getInterval(currentNote, 0).getSize()
+            : getInterval(currentNote, nextNote).getSize() *
+                  traversePath(nextNoteIndex - (currentNoteIndex < nextNoteIndex ? 1 : 0),
+                               nextPossibleNextNotes,
+                               clampLongDoubleToLimits(exponent * rollingWeight),
+                               nextReciporicalSumProdWeights)
+        };
 
-            lastNote = nextNote;
-            possibleNextNotesInPath.erase(possibleNextNotesInPath.begin() + nextNoteIndex);
-
-            const auto sumWeightsToNextNote{ 1 / sumWeights(nextNote, possibleNextNotesInPath) };
-
-            returnValue *= std::pow(nextInterval.getSize() * traverseScale(lastNote,
-                                                                           possibleNextNotesInPath,
-                                                                           rootNote,
-                                                                           clampLongDoubleToLimits(nextInterval.getWeight() *
-                                                                                                   rollingWeight *
-                                                                                                   sumWeightsToNextNote),
-                                                                           weightCutoff,
-                                                                           sumWeightsToNextNote),
-                                    nextInterval.getWeight() * possibleWeightsToNoteSum);
-
-            possibleNextNotesInPath.insert(possibleNextNotesInPath.begin() + nextNoteIndex, lastNote);
-            lastNote = initialLastNote;
-        }
+        returnValue *= std::pow(intervalSize, exponent);
     }
 
     return returnValue;
 }
 
-std::vector<std::vector<long double>> Scale::makePopulatedTunings(const long double& weightCutoff) const
+std::vector<long double> Scale::makePopulatedTuning() const
 {
-    auto percentTuned{ [this](int& rootNote, int& note) -> long double
+    auto percentTuned{ [this](const int& note) -> long double
         {
-            return (((long double)rootNote / (long double)size())
-                + ((long double)note / ((long double)size() * (long double)size()))) * 100;
+            return 100 * (long double)note / (long double)size();
         }
     };
 
-    std::vector<std::vector<long double>> tunings(size(), std::vector<long double>(size()));
+    std::vector<long double> tuning;
+    tuning.reserve(size());
 
     long double lastPercentage{ 0 };
     const long double loadingInterval{ 0.1 };
@@ -230,62 +249,48 @@ std::vector<std::vector<long double>> Scale::makePopulatedTunings(const long dou
     std::cout << "Tuning " << name << std::endl << std::endl;
     std::cout << std::fixed << std::setprecision(1) << "Progress: 0.0% \r";
 
-    for (auto rootNote{ 0 }; rootNote != size(); ++rootNote)
-        for (auto note{ 0 }; note != size(); ++note)
+    for (auto note{ 0 }; note != size(); ++note)
+    {
+        tuning.push_back(tuneNote(note));
+
+        const auto percentage{ percentTuned(note) };
+
+        if (percentage - lastPercentage >= loadingInterval)
         {
-            tunings[rootNote][note] = rootNote == note ? 1 : makeTuning(rootNote, note, weightCutoff);
-
-            const auto percentage{ percentTuned(rootNote, note) };
-
-            if (percentage - lastPercentage >= loadingInterval)
-            {
-                std::cout << "Progress: " << percentage << "% \r";
-                lastPercentage = percentage;
-            }
+            std::cout << "Progress: " << percentage << "% \r";
+            lastPercentage = percentage;
         }
+    }
 
     std::cout << "Progress: 100.0% \r\n" << std::endl;
 
-    return tunings;
+    return tuning;
 }
 
-std::vector<double> Scale::normaliseTuningsAndMakeAverageTuning(std::vector<std::vector<long double>>& tunings, const int& trueRootNote) const
+void Scale::adjustTuningRootNote(std::vector<long double>& tuning,
+                                 const int& rootNoteIndex) const
 {
-    //normalise
-    for (auto rootNote{ 1 }; rootNote != size(); ++rootNote)
-        if (rootNote != trueRootNote)
-        {
-            const auto adjustmentFactor{ 1L / tunings[rootNote][trueRootNote] };
-
-            for (auto& tunedNote : tunings[rootNote])
-                tunedNote *= adjustmentFactor;
-        }
-
-    //average
-    std::vector<double> averageTuning(size(), 1);
-
-    for (auto note{ 0 }; note != size(); ++note)
-        for (auto rootNote{ 0 }; rootNote != size(); ++rootNote)
-            averageTuning[note] *= std::pow(tunings[rootNote][note], 1L / (long double)size());
-
-    return averageTuning;
+    const auto rootTuning{ tuning[rootNoteIndex] };
+    for (auto& note : tuning)
+        note /= rootTuning;
 }
 
-std::vector<double> Scale::insertDummyNotes(std::vector<double>& tuning) const
+std::vector<float> Scale::insertDummyNotes(const std::vector<long double>& tuning) const
 {
-    tuning.reserve(tuning.size() + dummyIndecies.size());
-
     auto insertionAdjustment{ 0 };
 
+    std::vector<float> tuningWithDummies(tuning.begin(), tuning.end());
+    tuningWithDummies.reserve(tuningWithDummies.size() + dummyIndecies.size());
+
     for (const auto& index : dummyIndecies)
-        if (index + insertionAdjustment >= 0 && index < tuning.size())
+        if (index + insertionAdjustment >= 0 && index < tuningWithDummies.size())
         {
-            tuning.insert(tuning.begin() + index + insertionAdjustment, std::numeric_limits<double>::quiet_NaN());
+            tuningWithDummies.insert(tuningWithDummies.begin() + index + insertionAdjustment, std::numeric_limits<double>::quiet_NaN());
 
             ++insertionAdjustment;
         }
 
-    return tuning;
+    return tuningWithDummies;
 }
 
 void Scale::normaliseWeights()

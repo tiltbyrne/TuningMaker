@@ -21,6 +21,7 @@ static void addCustomScaleToPitchSpace(PitchSpace<Relation>& pitchSpace, const s
     }
 
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
     pitchSpace.addSigniature(scaleName, scaleSigniature);
 }
 
@@ -42,6 +43,7 @@ static void addCustomDecimalPitchSpace(const std::string& pitchSpaceName)
     }
 
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
     PitchSpaces::decimal.insert({ pitchSpaceName, relationsTable });
 }
 
@@ -76,9 +78,9 @@ static void addCustomFractionalPitchSpace(const std::string& pitchSpaceName)
     PitchSpaces::fractional.insert({ pitchSpaceName, relationsTable });
 }
 
-static void printTuning(const std::vector<double>& tuning)
+static void printTuning(const std::vector<float>& tuning)
 {
-    std::cout << std::endl << "As linear factors: " << std::endl;
+    std::cout << std::setprecision(4) << std::endl << "As linear factors: " << std::endl;
 
     for (auto note{ 0 }; note != tuning.size(); ++note)
     {
@@ -87,21 +89,19 @@ static void printTuning(const std::vector<double>& tuning)
         if (std::isnan(factor))
             std::cout << '\n' << "0.00001";//this value is well out of human hearing range
         else
-            std::cout << '\n' << std::setprecision(4) << factor;
+            std::cout << '\n' << factor;
     }
 
 	std::cout << std::endl << std::endl << "As cents: " << std::endl << std::endl;
 
     for (auto note{ 0 }; note != tuning.size(); ++note)
     {
-		std::cout << std::fixed << note << ") ";
-
         const auto& factor{ tuning[note] };
 
-        if (!std::isnan(factor))
-            std::cout << std::setprecision(4) << centsFromRatio(tuning[note]);
-
-        std::cout << '\n';
+        if (std::isnan(factor))
+            std::cout << '\n' << "0.0";
+        else
+            std::cout << '\n' << centsFromRatio(factor);
     }
 }
 
@@ -139,6 +139,7 @@ int main()
         }
 
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        
         if (pitchSpaceType == 'd' || pitchSpaceType == 'f')
 			break;
     }
@@ -147,6 +148,7 @@ int main()
 
     std::string pitchSpaceName;
     std::cin >> pitchSpaceName;
+
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
     std::cout << std::endl;
@@ -192,6 +194,7 @@ int main()
 
     std::string scaleName;
     std::cin >> scaleName;
+
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
     switch (pitchSpaceType)
@@ -240,6 +243,7 @@ int main()
 
     int range;
     std::cin >> range;
+
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
     if (range < 1)
@@ -247,15 +251,16 @@ int main()
 
     std::cout << std::endl << "Enter the index of the root note of the final tuning of this scale [0, " << range << "): ";
 
-    int trueRootNote;
-    std::cin >> trueRootNote;
+    int rootNote;
+    std::cin >> rootNote;
+
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
-    if (trueRootNote < 0)
-        trueRootNote = 0;
+    if (rootNote < 0)
+        rootNote = 0;
 
-    if (trueRootNote >= range)
-        trueRootNote = range - 1;
+    if (rootNote >= range)
+        rootNote = range - 1;
 
     std::cout << std::endl << "Would you like to fill notes in [" << pitchSpaceName << "] not contained in [" << scaleName << "] with 'dummy notes'? ";
 
@@ -304,6 +309,7 @@ int main()
 
             long double enropyCurve;
             std::cin >> enropyCurve;
+
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
             scale = Scale(IntervalPatternMakers::rangedScaleFractionsToIntervalsWithTenneyWeight(relationsTable.value(), enropyCurve),
@@ -314,22 +320,41 @@ int main()
         }
     }
 
-	std::cout << std::endl << "Enter the cutoff weight (between 0 and 1) for tuning calculations (hint: smaller values produce more accurate tunings but take longer to compute): ";
+	std::cout << std::endl << "Enter the cutoff weight [0, 1] for tuning calculations (hint: smaller values produce more accurate tunings but take longer to compute): ";
 
-    long double weightLimit;
-	std::cin >> weightLimit;
+    long double cutoffWeight;
+	std::cin >> cutoffWeight;
+
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
-    if (weightLimit < 0)
-		weightLimit = 0;
-	if (weightLimit > 1)
-		weightLimit = 1;
+    if (cutoffWeight < 0)
+		cutoffWeight = 0;
+	if (cutoffWeight > 1)
+		cutoffWeight = 1;
 
     std::cout << std::endl;
 
-    const auto tuning{ scale.tuneScale(trueRootNote, weightLimit) };
+    scale.setWeightCutoff(cutoffWeight);
+
+    const auto tuning{ scale.tuneScale(rootNote) };
 
     std::cout << "Final tuning for " << scaleNameFull << ": " << std::endl;
+
+    /*
+    Scale scale{ { { {9.f / 8.f, 1}, {4.f / 3.f, 1}, {5.f / 3.f, 1} },
+                   { {6.f / 5.f, 1}, {3.f / 2.f, 1} },
+                   { {5.f / 4.f, 1} } },
+        "test scale"};
+
+    const auto rootNote{ 0 };
+	const long double cutoffWeight{ 0 };
+
+    scale.setWeightCutoff(cutoffWeight);
+
+    const auto tuning{ scale.tuneScale(rootNote) };
+
+    std::cout << "Final tuning for " << "test scale" << ": " << std::endl;
+    */
 
     printTuning(tuning);
 }

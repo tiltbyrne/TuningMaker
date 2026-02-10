@@ -427,5 +427,9 @@ namespace PitchSpaces
         auto& twentytwoEDO{ PitchSpaces::fractional.at("22edo") };
 
         twentytwoEDO.addSigniature("orwell9", { 0, 3, 5, 8, 10, 13, 15, 18, 20 });
+
+        auto& seventeenEDO{ PitchSpaces::fractional.at("17edo") };
+        
+        seventeenEDO.addSigniature("neutrominant", { 0, 2, 4, 5, 7, 9, 10, 12, 14, 16 });
     }
 }
