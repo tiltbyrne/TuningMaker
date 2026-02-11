@@ -219,11 +219,10 @@ long double Scale::traversePath(const int& currentNoteIndex, const std::vector<i
 
         const auto intervalSize{ (nextNote == 0 || nextNote == currentNote || exponent * rollingWeight <= weightCutoff)
             ? getInterval(currentNote, 0).getSize()
-            : getInterval(currentNote, nextNote).getSize() *
-                  traversePath(nextNoteIndex - (currentNoteIndex < nextNoteIndex ? 1 : 0),
-                               nextPossibleNextNotes,
-                               clampLongDoubleToLimits(exponent * rollingWeight),
-                               nextReciporicalSumProdWeights)
+            : getInterval(currentNote, nextNote).getSize() * traversePath(nextNoteIndex - (currentNoteIndex < nextNoteIndex ? 1 : 0),
+                                                                          nextPossibleNextNotes,
+                                                                          clampLongDoubleToLimits(exponent * rollingWeight),
+                                                                          nextReciporicalSumProdWeights)
         };
 
         returnValue *= std::pow(intervalSize, exponent);

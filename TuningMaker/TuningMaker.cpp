@@ -78,39 +78,44 @@ static void addCustomFractionalPitchSpace(const std::string& pitchSpaceName)
     PitchSpaces::fractional.insert({ pitchSpaceName, relationsTable });
 }
 
-static void printTuning(const std::vector<float>& tuning)
+static void writeTuningFile(const std::vector<float>& tuning, std::ofstream& file)
 {
-    std::cout << std::setprecision(4) << std::endl << "As linear factors: " << std::endl;
+    file << std::setprecision(8);
+
+    file << "Tuning as cents:" << std::endl;
 
     for (auto note{ 0 }; note != tuning.size(); ++note)
     {
         const auto& factor{ tuning[note] };
 
         if (std::isnan(factor))
-            std::cout << '\n' << "0.00001";//this value is well out of human hearing range
+            file << '\n' << 0.f;
         else
-            std::cout << '\n' << factor;
+            file << '\n' << centsFromRatio(factor);
     }
 
-	std::cout << std::endl << std::endl << "As cents: " << std::endl << std::endl;
+    file << std::endl << std::endl << "Tuning as linear factors:" << std::endl;
 
     for (auto note{ 0 }; note != tuning.size(); ++note)
     {
         const auto& factor{ tuning[note] };
 
         if (std::isnan(factor))
-            std::cout << '\n' << "0.0";
+            file << '\n' << 1.f;
         else
-            std::cout << '\n' << centsFromRatio(factor);
+            file << '\n' << factor;
     }
+
+    file.close();
 }
 
 int main()
 {
     PitchSpaces::initialisePitchSpaceScales();
 
-    std::cout << "Welcome to Tuning Maker. To make a tuning of a scale you must first choose the pitch space it occupies. "
-        << "Do you want to use a decimal or fractional pitch space? ";
+    std::cout << "Welcome to Tuning Maker. This program will ask for information about a scale, then compute a "
+        << "tuning of it. This tuning will be written to a text file inside the folder in which TuningMaker.exe is saved.\n\n"
+        << "First, choose the pitch space the scale occupies. Do you want to use a decimal or fractional pitch space? ";
 
     char pitchSpaceType;
 
@@ -158,7 +163,8 @@ int main()
     case 'd':
         if (PitchSpaces::decimal.find(pitchSpaceName) == PitchSpaces::decimal.end())
         {
-            std::cout << "Enter the intervals in [" << pitchSpaceName << "] as decimals separated by spaces. Enter 'end' when finished." << std::endl << std::endl;
+            std::cout << "Enter the intervals in [" << pitchSpaceName << "] as decimals. Remember to include the period ('octave') of the pitch space. "
+                << "Enter 'end' when finished." << std::endl << std::endl;
 
             addCustomDecimalPitchSpace(pitchSpaceName);
 
@@ -168,7 +174,8 @@ int main()
 	case 'f':
         if (PitchSpaces::fractional.find(pitchSpaceName) == PitchSpaces::fractional.end())
         {
-            std::cout << "Enter the intervals in [" << pitchSpaceName << "] as fractions separated by spaces. Enter 'end' when finished." << std::endl << std::endl;
+            std::cout << "Enter the intervals in [" << pitchSpaceName << "] as fractions. Remember to include the period ('octave') of the pitch space. "
+                << "Enter 'end' when finished." << std::endl << std::endl;
 
             addCustomFractionalPitchSpace(pitchSpaceName);
 
@@ -179,7 +186,7 @@ int main()
         break;
     }
 
-    std::cout << "Available scales in [" << pitchSpaceName << "]:" << std::endl << std::endl;
+    std::cout << "Available scales in [" << pitchSpaceName << "] (period omitted):" << std::endl << std::endl;
 
     if (pitchSpaceType == 'd')
     {
@@ -202,7 +209,7 @@ int main()
     case 'd':
         if (!PitchSpaces::decimal.at(pitchSpaceName).getSigniature(scaleName).has_value())
         {
-            std::cout << std::endl << "Enter the indecies of the intervals from the [" << scaleName << "] scale as integers separated by spaces. Enter 'end' when finished:" << std::endl << std::endl;
+            std::cout << std::endl << "Enter the indecies of the intervals from the [" << scaleName << "] scale as integers. Enter 'end' when finished:" << std::endl << std::endl;
 
             addCustomScaleToPitchSpace(PitchSpaces::decimal.at(pitchSpaceName), scaleName);
         }
@@ -210,7 +217,7 @@ int main()
     case 'f':
         if (!PitchSpaces::fractional.at(pitchSpaceName).getSigniature(scaleName).has_value())
         {
-            std::cout << std::endl << "Enter the indecies of the intervals from the [" << scaleName << "] scale as integers separated by spaces. Enter 'end' when finished:" << std::endl << std::endl;
+            std::cout << std::endl << "Enter the indecies of the intervals from the [" << scaleName << "] scale as integers. Enter 'end' when finished:" << std::endl << std::endl;
 
             addCustomScaleToPitchSpace(PitchSpaces::fractional.at(pitchSpaceName), scaleName);
         }
@@ -241,28 +248,63 @@ int main()
     std::cout << std::endl << std::endl << "Enter the range of the final tuning of this scale "
         << "(hint: this scale contains " << scaleLength << " notes): ";
 
+    std::string inputLine;
+    std::cin >> inputLine;
+
     int range;
-    std::cin >> range;
+    try
+    {
+        range = std::stoi(inputLine);
+
+        if (range < 1)
+        {
+            range = 1;
+            std::cout << "Invalid value: range set to " << range << std::endl;
+        }
+    }
+    catch (std::invalid_argument e)
+    {
+        range = scaleLength + 1;
+        std::cout << "Invalid value: range set to " << range << std::endl;
+    }
+
+    inputLine.clear();
 
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-
-    if (range < 1)
-        range = 1;
 
     std::cout << std::endl << "Enter the index of the root note of the final tuning of this scale [0, " << range << "): ";
 
+    std::cin >> inputLine;
+
     int rootNote;
-    std::cin >> rootNote;
+    try
+    {
+        rootNote = std::stoi(inputLine);
+
+        if (rootNote < 0)
+        {
+            rootNote = 0;
+            std::cout << "Invalid index: root note index set to " << rootNote << std::endl;
+        }
+
+        if (rootNote >= range)
+        {
+            rootNote = range - 1;
+            std::cout << "Invalid index: root note index set to " << rootNote << std::endl;
+        }
+    }
+    catch (std::invalid_argument e)
+    {
+        rootNote = 0;
+        std::cout << "Invalid index: root note index set to " << rootNote << std::endl;
+    }
+
+    inputLine.clear();
 
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
-    if (rootNote < 0)
-        rootNote = 0;
-
-    if (rootNote >= range)
-        rootNote = range - 1;
-
-    std::cout << std::endl << "Would you like to fill notes in [" << pitchSpaceName << "] not contained in [" << scaleName << "] with 'dummy notes'? ";
+    std::cout << std::endl << "Would you like to fill notes in [" << pitchSpaceName << "] not contained in ["
+         << pitchSpaceName << "]-[" << scaleName << "] with dummy values, which are tuned to 0 cents? ";
 
 	char wantsDummyNotes;
 
@@ -272,7 +314,6 @@ int main()
     {
         std::cout << "Enter 'y' for yes or 'n' for no: ";
         std::cin >> wantsDummyNotes;
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
         if (wantsDummyNotes == 'y' || wantsDummyNotes == 'n')
         {
@@ -282,6 +323,8 @@ int main()
         {
             std::cout << std::endl << "Invalid answer. ";
         }
+
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     }
 
 	const std::string scaleNameFull{ "[" + pitchSpaceName + "]-[" + scaleName + "]" };
@@ -305,10 +348,24 @@ int main()
         {
             std::cout << std::endl << "Enter the exponent of the Tenney height used to calculate each interval's weight "
                 << "(hint: larger values can produce tunings with more accurate approximations of simple intervals at "
-                << "the expense of the accuratcy of more complex ones. Exponent = 0 treats all intervals equally): ";
+                << "the expense of the accuratcy of more complex ones. An exponent of zero makes all weights equal to one): ";
+
+            std::cin >> inputLine;
 
             long double enropyCurve;
-            std::cin >> enropyCurve;
+
+            try
+            {
+                enropyCurve = std::stold(inputLine);
+
+                clampLongDoubleToLimits(enropyCurve);
+            }
+            catch (std::invalid_argument e)
+            {
+                enropyCurve = 0;
+                std::cout << "Invalid value: exponent set to " << enropyCurve << std::endl;
+            }
+            inputLine.clear();
 
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
@@ -320,17 +377,36 @@ int main()
         }
     }
 
-	std::cout << std::endl << "Enter the cutoff weight [0, 1] for tuning calculations (hint: smaller values produce more accurate tunings but take longer to compute): ";
+    const long double recomendedCuttoff{ 0.001 };
+	std::cout << std::endl << "Enter the cutoff weight [0, 1] for tuning calculations (hint: smaller values produce more accurate tunings "
+        << "but take longer to compute, " << recomendedCuttoff << " tends to work well): ";
+
+    std::cin >> inputLine;
 
     long double cutoffWeight;
-	std::cin >> cutoffWeight;
+    try
+    {
+        cutoffWeight = std::stold(inputLine);
+
+        if (cutoffWeight < 0)
+        {
+            cutoffWeight = recomendedCuttoff;
+            std::cout << "Invalid value: cutoff weight set to " << cutoffWeight << std::endl;
+        }
+        if (cutoffWeight > 1)
+        {
+            cutoffWeight = recomendedCuttoff;
+            std::cout << "Invalid value: cutoff weight set to " << cutoffWeight << std::endl;
+        }
+    }
+    catch (std::invalid_argument e)
+    {
+        cutoffWeight = recomendedCuttoff;
+        std::cout << "Invalid value: cutoff weight set to " << cutoffWeight << std::endl;
+    }
+    inputLine.clear();
 
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-
-    if (cutoffWeight < 0)
-		cutoffWeight = 0;
-	if (cutoffWeight > 1)
-		cutoffWeight = 1;
 
     std::cout << std::endl;
 
@@ -338,23 +414,23 @@ int main()
 
     const auto tuning{ scale.tuneScale(rootNote) };
 
-    std::cout << "Final tuning for " << scaleNameFull << ": " << std::endl;
+    std::cout << "A tuning of " << scaleNameFull << " has been computed. Enter the name of the text file "
+        << "to which the tuning will be written: ";
 
-    /*
-    Scale scale{ { { {9.f / 8.f, 1}, {4.f / 3.f, 1}, {5.f / 3.f, 1} },
-                   { {6.f / 5.f, 1}, {3.f / 2.f, 1} },
-                   { {5.f / 4.f, 1} } },
-        "test scale"};
+    std::string fileName;
+    std::getline(std::cin, fileName);
 
-    const auto rootNote{ 0 };
-	const long double cutoffWeight{ 0 };
+    //std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
-    scale.setWeightCutoff(cutoffWeight);
+    // Write to the file
+    std::cout << std::endl << "The text file will be written after the program is exited. Copy it's contents into "
+        << "Scala, Excel, or Scale Workshop to further manipulate it, analyse it, "
+        << "or produce a tuning file of it. Thank you for using Tuning Maker. Press any key to exit.\n";
 
-    const auto tuning{ scale.tuneScale(rootNote) };
+    std::cin.get();
 
-    std::cout << "Final tuning for " << "test scale" << ": " << std::endl;
-    */
+    // Create and open a text file
+    std::ofstream file(fileName + ".txt");
 
-    printTuning(tuning);
+    writeTuningFile(tuning, file);
 }
