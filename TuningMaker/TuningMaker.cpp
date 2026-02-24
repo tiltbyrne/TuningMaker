@@ -404,6 +404,7 @@ int main()
         cutoffWeight = recomendedCuttoff;
         std::cout << "Invalid value: cutoff weight set to " << cutoffWeight << std::endl;
     }
+
     inputLine.clear();
 
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');

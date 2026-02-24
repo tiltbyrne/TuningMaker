@@ -83,7 +83,7 @@ private:
 */
 static long double tenneyHeightOfFraction(const Fraction& fraction, const long double& entropyCurve = 1)
 {
-    auto returnValue{ std::pow(1L / (long double)(fraction.getNumerator() * fraction.getDenominator()), entropyCurve) };
+    auto returnValue{ std::pow( 1L / (1 + std::log((long double)(fraction.getNumerator() * fraction.getDenominator()))), entropyCurve) };
 
     if (std::isnan(returnValue))
         returnValue = 0;

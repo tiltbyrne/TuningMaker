@@ -116,7 +116,8 @@ public:
       Sets the dummy notes of the scale. In tuning of the scale produced by tuneScale, dummy note
       tunings will be inserted at these indecies, which are represented by NaN values. Note that
       the indecies of dummy notes are independent of intervalsPattern and invalid dummy indecies
-      will not be inserted into the final tuning.
+      will not be inserted into the final tuning. Behaviour is highly dependent on the result of
+
     */
     void setDummyIndecies(const std::vector<int>& newDummyIndecies);
 
@@ -153,7 +154,8 @@ public:
     /*
       Produces a tuning of the scale. The tuning of the note at index = rootNote will always equal 1f
       Depending on the size of the scale and the weights of it's intervals weightCutoff can have a large
-      influence on the time it takes for this function to return.
+	  influence on the time it takes for this function to return. WeightRangeIsSmallerThanPercentage
+      also has a large influence on this time, as if it returns true then a much faster tuning algorithm is used.
     */
     std::vector<float> tuneScale(const int& rootNote) const;
 
@@ -175,7 +177,7 @@ private:
 
     /*
       The total weight of an interval tuning a note at which scale traversal will be halted and that interval
-      will be replaced by an interval from note 0 to the note at the index of that interval.
+      will be replaced by an interval from note 0 to the note at the index of that interval. 
     */
     long double weightCutoff;
 
@@ -211,7 +213,13 @@ private:
     /*
       Manages calls to makeTuning() for all notes and tracks progress of this calculation.
     */
-    std::vector<long double> makePopulatedTuning() const;
+    std::vector<long double> makeWeightedTuning() const;
+
+    /*
+	  Makes a tuning of the scale where all intervals have equal weight which can be significantly faster to
+      calculate than a weighted tuning.
+    */
+    std::vector<long double> makeWeightlessTuning() const;
 
     /*
       Adjusts the relationships in the tuning such that the tuning of the note in tuning at
@@ -229,6 +237,12 @@ private:
       Normalises the weights of all intervals in intervalsPattern to a range of (0, 1].
     */
     void normaliseWeights();
+
+    /*
+	  Returns true if the difference between the smallest and greatest weights of all intervals in the scale
+	  are less than 0.01%, which is a good indication that the scale can be tuned without weighting intervals.
+    */
+	bool weightRangeIsSmallerThanPercentage(const long double& percentage) const;
 };
 
 

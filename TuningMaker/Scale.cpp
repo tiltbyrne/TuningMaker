@@ -157,7 +157,7 @@ long double Scale::getMaxWeight() const
 
 std::vector<float> Scale::tuneScale(const int& rootNote) const
 {
-    auto tuning{ makePopulatedTuning() };
+    auto tuning{ weightRangeIsSmallerThanPercentage(0.01) ? makeWeightlessTuning() : makeWeightedTuning()};
 
     adjustTuningRootNote(tuning, (rootNote < 0 ? 0 : rootNote >= size() ? size() - 1 : rootNote));
 
@@ -231,37 +231,49 @@ long double Scale::traversePath(const int& currentNoteIndex, const std::vector<i
     return returnValue;
 }
 
-std::vector<long double> Scale::makePopulatedTuning() const
+std::vector<long double> Scale::makeWeightedTuning() const
 {
-    auto percentTuned{ [this](const int& note) -> long double
-        {
-            return 100 * (long double)note / (long double)size();
-        }
-    };
-
     std::vector<long double> tuning;
     tuning.reserve(size());
 
-    long double lastPercentage{ 0 };
-    const long double loadingInterval{ 0.1 };
-
     std::cout << "Tuning " << name << std::endl << std::endl;
-    std::cout << std::fixed << std::setprecision(1) << "Progress: 0.0% \r";
+    std::cout << std::fixed << std::setprecision(1) << "Progress: 0 of " << size() - 1 << "notes tuned.\r";
 
     for (auto note{ 0 }; note != size(); ++note)
     {
         tuning.push_back(tuneNote(note));
-
-        const auto percentage{ percentTuned(note) };
-
-        if (percentage - lastPercentage >= loadingInterval)
-        {
-            std::cout << "Progress: " << percentage << "% \r";
-            lastPercentage = percentage;
-        }
+        std::cout << "Progress: " << note << " of " << size() - 1 << " notes tuned.\r";
     }
 
-    std::cout << "Progress: 100.0% \r\n" << std::endl;
+    std::cout << "Progress: " << size() - 1 << " of " << size() - 1 << " notes tuned." << std::endl << std::endl;
+
+    return tuning;
+}
+
+std::vector<long double> Scale::makeWeightlessTuning() const
+{
+    std::cout << "Tuning " << name << std::endl << std::endl;
+
+    std::vector<long double> tuning;
+    tuning.reserve(size());
+
+    for (auto noteTo{ 0 }; noteTo != size(); ++noteTo)
+    {
+        tuning.push_back(1);
+
+        if (noteTo == 0)
+			continue;
+
+        for (auto noteFrom{ 0 }; noteFrom != size(); ++noteFrom)
+            tuning[noteTo] *= clampLongDoubleToLimits(
+                (noteFrom == 0 || noteFrom == noteTo) ? getInterval(noteTo, 0).getSize()
+                                                      : getInterval(noteTo, noteFrom).getSize() *
+                                                        getInterval(noteFrom, 0).getSize());
+
+		tuning[noteTo] = std::pow(tuning[noteTo], 1.0 / size());
+    }
+
+    std::cout << "Progress: " << size() - 1 << " of " << size() - 1 << " notes tuned." << std::endl << std::endl;
 
     return tuning;
 }
@@ -299,4 +311,9 @@ void Scale::normaliseWeights()
     for (auto& row : intervalsPattern)
         for (auto& Interval : row)
             Interval.setWeight(Interval.getWeight() / maxWeight);
+}
+
+bool Scale::weightRangeIsSmallerThanPercentage(const long double& percentage) const
+{
+    return getMaxWeight() - getMinWeight() < percentage / (100 * getMaxWeight());
 }
